@@ -190,8 +190,8 @@ module powerbi.visuals {
                     hexRadius: hexRadius,
                     selector: SelectionId.createWithId(dataView.categorical.categories[0].identity[0]),
                     toolTipInfo: [{
-                        displayName: 'Test',
-                        value: '1...2....3... can you see me? I am sending random strings to the tooltip',
+                        displayName: category,
+                        value: xMeta + ": " + xValue + ", " + yMeta + ": " + yValue + ", " + sizeValueMeta + ": " + sizeValue
                     }]
                 };
                 dataArray.push(data);
@@ -248,7 +248,7 @@ module powerbi.visuals {
                 .attr("width", options.viewport.width);
 
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
-            var margin = { top: 20, right: 0, bottom: 20, left: 70 };
+            var margin = { top: 20, right: 0, bottom: 20, left: 50 };
             var w = $(".svgHexbinContainer").width() - margin.left;
             var h = $(".svgHexbinContainer").height() - margin.bottom;
             var hexGroup = d3.select(".hexGroup");
@@ -287,10 +287,10 @@ module powerbi.visuals {
                 .call(xAxis);
 
             xAxisLabel
-                .attr("transform", "translate(" + (w / 2) + "," + (margin.bottom - 6) + ")")
+                .attr("transform", "translate(" + (w / 2) + "," + (margin.bottom + 6) + ")")
                 .attr("dy", ".32em")
                 .style("text-anchor", "end")
-                .text(chartData[0].xMeta.displayName);
+                .text(chartData[0].xMeta);
 
             yAxisTicks
                 .attr("transform", "translate(" + margin.left + "," + 0 + ")")
@@ -301,7 +301,7 @@ module powerbi.visuals {
                 .attr("transform", "translate(" + (-margin.left + 6) + "," + (h / 2) + ") rotate(-90)")
                 .attr("dy", ".32em")
                 .style("text-anchor", "end")
-                .text(chartData[0].yMeta.displayName);
+                .text(chartData[0].yMeta);
 
             //TooltipManager.addTooltip(this.hexGroup, (tooltipEvent: TooltipEvent) => tooltipEvent.data.toolTipInfo);  
 
@@ -534,8 +534,8 @@ module powerbi.visuals {
 }
 
 module powerbi.visuals.plugins {
-    export var scatterHexbin: IVisualPlugin = {
-        name: 'scatterHexbin',
+    export var _scatterHexbin: IVisualPlugin = {
+        name: '_scatterHexbin',
         capabilities: ScatterHexbin.capabilities,
         create: () => new ScatterHexbin()
     };
