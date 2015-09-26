@@ -527,7 +527,7 @@ module powerbi.visuals {
         }
 
         public destroy() {
-            d3.selectAll("svg").remove();
+            d3.select(".svgHexbinContainer").remove();
         }
 
     }
