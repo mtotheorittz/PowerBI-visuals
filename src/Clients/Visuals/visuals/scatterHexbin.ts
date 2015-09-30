@@ -32,7 +32,7 @@
  */
 
 /* Please make sure that this path is correct */
- /// <reference path="../_references.ts"/>
+/// <reference path="../_references.ts"/>
 
 module powerbi.visuals {
 
@@ -47,14 +47,12 @@ module powerbi.visuals {
         xMeta: string;
         yMeta: string;
         sizeValueMeta: string;
-        fillColor: string;
-        hexRadius: number;
         selector: SelectionId;
         toolTipInfo: TooltipDataItem[];
     };
-    
+
     export class ScatterHexbin implements IVisual {
-        
+
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
@@ -128,8 +126,6 @@ module powerbi.visuals {
             var xMeta = null;
             var yMeta = null;
             var sizeValueMeta = null;
-            var fillColor = this.getFill(dataView).solid.color;
-            var hexRadius = this.getHexRadius(dataView);
 
             //Metadata "roles" currently exist in production but not in Playground. 
             if (catMetaData.columns[0].roles) {
@@ -186,8 +182,6 @@ module powerbi.visuals {
                     xMeta: xMeta,
                     yMeta: yMeta,
                     sizeValueMeta: sizeValueMeta,
-                    fillColor: fillColor,
-                    hexRadius: hexRadius,
                     selector: SelectionId.createWithId(dataView.categorical.categories[0].identity[0]),
                     toolTipInfo: [{
                         displayName: category,
@@ -240,14 +234,16 @@ module powerbi.visuals {
         public update(options: VisualUpdateOptions) {
             console.log('update');
             console.log(options);
-            
-            //var selectionManager = this.selectionManager;
 
             d3.select(".svgHexbinContainer")
                 .attr("height", options.viewport.height)
                 .attr("width", options.viewport.width);
 
+            this.dataView = options.dataViews[0];
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
+            var fillColor = this.getFill(this.dataView).solid.color;
+            var hexRadius = this.getHexRadius(this.dataView);
+
             var margin = { top: 20, right: 0, bottom: 20, left: 50 };
             var w = $(".svgHexbinContainer").width() - margin.left;
             var h = $(".svgHexbinContainer").height() - margin.bottom;
@@ -257,6 +253,8 @@ module powerbi.visuals {
             var yAxisTicks = d3.select("#yAxis");
             var xAxisLabel = d3.select("#xAxisLabel");
             var yAxisLabel = d3.select("#yAxisLabel");
+
+            var selectionManager = this.selectionManager;
 
             var xScale = d3.scale.linear()
                 .domain(d3.extent(chartData, function (d) {
@@ -307,7 +305,7 @@ module powerbi.visuals {
 
             makeHexbins();
             makeDots();
-            
+
             function getXValue(d): number {
                 return d.xValue;
             }
@@ -327,9 +325,9 @@ module powerbi.visuals {
                     .attr("r", "3px")
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); })
-                    //.attr("cy", "0")
+                //.attr("cy", "0")
                     .style("fill", "grey");
-                  //.style("fill", function(d) { return color(d.category); });
+                //.style("fill", function(d) { return color(d.category); })
 
                 dot.transition()
                     .duration(2000)
@@ -343,7 +341,7 @@ module powerbi.visuals {
                     .duration(2000)
                     .remove();
             }
-            
+
             function makeHexbins() {
 
                 function assignHexbin(points, hexRadius) {
@@ -389,7 +387,7 @@ module powerbi.visuals {
 
                     return d3.values(binsById);
                 }
-                
+
                 function buildHexagon(radius) {
                     var x0 = 0, y0 = 0;
                     var d3_hexbinAngles = d3.range(0, 2 * Math.PI, Math.PI / 3);
@@ -420,15 +418,14 @@ module powerbi.visuals {
                     }
                     return aggSize;
                 }
-                
-                var hexRadius = chartData[0].hexRadius;
+
                 var hexData = assignHexbin(chartData, hexRadius);
                 //console.log('hexData: ' + JSON.stringify(hexData));
-                var fill = chartData[0].fillColor;
+                var fill = fillColor;
 
                 var hexColor = d3.scale.linear()
                     .domain(d3.extent(hexData, function (d) { var v = getSaturation(d); return v; })).nice()
-                    .range(["rgb(244, 244, 244)", fill])
+                    .range(["rgb(233, 233, 233)", fill])
                     .interpolate(d3.interpolateLab);
 
                 var hex = hexGroup.selectAll(".hexagon")
@@ -438,9 +435,9 @@ module powerbi.visuals {
                     .append("path")
                     .attr("class", "hexagon")
                     .attr("d", buildHexagon(hexRadius))
-                    .attr("transform", function (d) { return "translate(" + (d.x + margin.left) + "," + (d.y) + ")";})
-                    .style("fill", function (d) { return hexColor(getSaturation(d));})
-                  //.style("fill-opacity", ".8")
+                    .attr("transform", function (d) { return "translate(" + (d.x + margin.left) + "," + (d.y) + ")"; })
+                    .style("fill", function (d) { return hexColor(getSaturation(d)); })
+                //.style("fill-opacity", ".8")
                     .style("stroke", "#FFFFFF")
                     .style("stroke-width", "1px");
 
@@ -454,6 +451,17 @@ module powerbi.visuals {
                         return hexColor(getSaturation(d));
                     });
 
+                hex.on("click", function (d) {
+                    selectionManager.select(d[0].identity).then(ids => {
+                        if (ids.length > 0) {
+                            hex.style('opacity', 1);
+                            d3.select(this).style('opacity', 1);
+                        }
+                        else {
+                            hex.style('opacity', 1);
+                        }
+                    });
+                });
                 //hex.on('click', function (d) {
                 //    console.log(d);
                 //    selectionManager
@@ -477,7 +485,6 @@ module powerbi.visuals {
 
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
             var instances: VisualObjectInstance[] = [];
-            var dataView = this.dataView;
             switch (options.objectName) {
                 case 'general':
                     var general: VisualObjectInstance = {
@@ -485,8 +492,8 @@ module powerbi.visuals {
                         displayName: 'General',
                         selector: null,
                         properties: {
-                            fill: ScatterHexbin.getFill(dataView),
-                            hexRadius: ScatterHexbin.getHexRadius(dataView)
+                            fill: this.getFill(this.dataView),
+                            hexRadius: this.getHexRadius(this.dataView)
                         }
                     };
                     instances.push(general);
@@ -496,31 +503,21 @@ module powerbi.visuals {
             return instances;
         }
 
-        private static getFill(dataView: DataView): Fill {
-            if (dataView) {
-                var objects = dataView.metadata.objects;
-                if (objects) {
-                    var general = objects['general'];
-                    if (general) {
-                        var fill = <Fill>general['fill'];
-                        if (fill)
-                            return fill;
-                    }
+        private getFill(dataView: DataView): Fill {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <Fill>general['fill'];
                 }
             }
             return { solid: { color: 'rgb(1, 184, 170)' } };
         }
 
-        private static getHexRadius(dataView: DataView): number {
-            if (dataView) {
-                var objects = dataView.metadata.objects;
-                if (objects) {
-                    var general = objects['general'];
-                    if (general) {
-                        var radius = <number>general['hexRadius'];
-                        if (radius)
-                            return radius;
-                    }
+        private getHexRadius(dataView: DataView): number {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <number>general['hexRadius'];
                 }
             }
             return 20;
