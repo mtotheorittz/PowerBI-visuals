@@ -30,17 +30,13 @@ LEAFLET License obtained from: https://github.com/Leaflet/Leaflet/blob/master/LI
 Copyright (c) 2010-2015, Vladimir Agafonkin
 Copyright (c) 2010-2011, CloudMade
 All rights reserved.
-
 Redistribution and use in source and binary forms, with or without modification, are
 permitted provided that the following conditions are met:
-
    1. Redistributions of source code must retain the above copyright notice, this list of
       conditions and the following disclaimer.
-
    2. Redistributions in binary form must reproduce the above copyright notice, this list
       of conditions and the following disclaimer in the documentation and/or other materials
       provided with the distribution.
-
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
@@ -119,7 +115,7 @@ module powerbi.visuals {
             var cartoDBLight = L.tileLayer('http://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
                 attribution: 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
             });
-            
+
             var stamenToner = L.tileLayer('http://a.tile.stamen.com/toner/{z}/{x}/{y}.png', {
                 attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
             });
@@ -130,13 +126,13 @@ module powerbi.visuals {
 
             var emptyTile = L.tileLayer('', {
                 attribution: 'Absence of map tiles by David Eldersveld'
-            }); 
+            });
 
             var customImageUrl = 'https://i-msdn.sec.s-msft.com/dynimg/IC819671.png';
             var southWest = L.latLng(45.5, -89);
             var northEast = L.latLng(42, -80);
             var customImageBounds = L.latLngBounds(southWest, northEast);
-            var customImage = L.imageOverlay(customImageUrl, customImageBounds, {opacity: .5 });
+            var customImage = L.imageOverlay(customImageUrl, customImageBounds, { opacity: .5 });
 
             var baseTileType = {
                 "Default": defaultOSM,
@@ -151,9 +147,8 @@ module powerbi.visuals {
             return baseTileType;
         }
 
-        public static drawShapes(map, cartoData, radiusOption, bubbleAreaScale, fillOption, colorScale): any {
+        public static drawShapes(map, cartoData, radiusOption, bubbleAreaScale, pointFillOption, lineFillOption, lineWidthOption, polygonFillOption, colorScale): any {
             console.log('Leaflet Map: draw/check markers and polys');
-            //console.log(fillOption);
 
             var points = [];
             var lines = [];
@@ -167,16 +162,16 @@ module powerbi.visuals {
                 color: "rgb(244,244,244)",
                 fill: true,
                 fillOpacity: .6,
-                fillColor: "rgb(1, 184, 170)"
+                fillColor: pointFillOption
             };
 
             var polylineOptions = {
                 lineCap: "round",
                 lineJoin: "round",
                 stroke: true,
-                color: "rgb(1, 184, 170)",
+                color: lineFillOption,
                 opacity: .95,
-                weight: 5,
+                weight: lineWidthOption,
                 fill: false
             };
 
@@ -189,7 +184,7 @@ module powerbi.visuals {
                 weight: 1,
                 fill: true,
                 fillOpacity: .6,
-                fillColor: "rgb(200, 100, 100)"//fillOption
+                fillColor: polygonFillOption
             };
 
             for (var i in cartoData) {
@@ -210,11 +205,11 @@ module powerbi.visuals {
                                 "Latitude: " + cartoData[i].lat +
                                 "<br>Longitude: " + cartoData[i].lng +
                                 "<br>Value: " + cartoData[i].dataValue)
-                        )
+                            )
                         .on('mouseover', function (e) {
                             this.openPopup();
                         })
-                    );
+                        );
                 }
                 else if (cartoData[i].geoType === "LINESTRING") {
                     //console.log("adding polyline at " + cartoData[i].geoData);
@@ -278,13 +273,25 @@ module powerbi.visuals {
                         formatString: {
                             type: { formatting: { formatString: true } },
                         },
-                        fill: {
+                        pointFill: {
                             type: { fill: { solid: { color: true } } },
-                            displayName: 'Fill'
+                            displayName: 'Point color'
                         },
                         pointRadius: {
                             type: { numeric: true },
                             displayName: 'Point radius'
+                        },
+                        lineFill: {
+                            type: { fill: { solid: { color: true } } },
+                            displayName: 'Line color'
+                        },
+                        lineWidth: {
+                            type: { numeric: true },
+                            displayName: 'Line width'
+                        },
+                        polygonFill: {
+                            type: { fill: { solid: { color: true } } },
+                            displayName: 'Polygon color'
                         },
                     },
                 },
@@ -414,17 +421,20 @@ module powerbi.visuals {
 
         public update(options: VisualUpdateOptions) {
             if (!options.dataViews && !options.dataViews[0]) return;
-            var dataView = options.dataViews[0];
-            var cartoData = LeafletMap.converter(dataView);
+            this.dataView = options.dataViews[0];
+            var cartoData = LeafletMap.converter(this.dataView);
             
             //works with a jQuery select by not D3 select?
             //CSS required in both init() and update() for tiles to load properly
             $("#map")
                 .css("height", options.viewport.height)
                 .css("width", options.viewport.width);
-            
-            var fillOption = LeafletMap.getFill(dataView);
-            var radiusOption = LeafletMap.getPointRadius(dataView);
+
+            var pointFillOption = this.getFill(this.dataView, "point").solid.color;
+            var lineFillOption = this.getFill(this.dataView, "line").solid.color;
+            var polygonFillOption = this.getFill(this.dataView, "polygon").solid.color;
+            var radiusOption = this.getPointRadius(this.dataView);
+            var lineWidthOption = this.getLineWidth(this.dataView);
 
             var colorScale = d3.scale.linear()
                 .domain(d3.extent(cartoData, function (d) {
@@ -432,7 +442,7 @@ module powerbi.visuals {
                         return d.dataValue;
                     }
                 })).nice()
-                .range(["rgb(233, 233, 233)", "rgb(51,0,51)"])
+                .range(["rgb(233, 233, 233)", polygonFillOption])
                 .interpolate(d3.interpolateLab);
 
             var bubbleAreaScale = d3.scale.linear()
@@ -445,7 +455,7 @@ module powerbi.visuals {
                 .range([6 * Math.PI, 100 * Math.PI]);
 
             var baseTiles = LeafletMap.getBaseTiles();
-            var shapes = LeafletMap.drawShapes(map, cartoData, radiusOption, bubbleAreaScale, fillOption, colorScale);
+            var shapes = LeafletMap.drawShapes(map, cartoData, radiusOption, bubbleAreaScale, pointFillOption, lineFillOption, lineWidthOption, polygonFillOption, colorScale);
             var map = LeafletMap.createMap(baseTiles, shapes);
 
             L.control.layers(baseTiles, shapes).addTo(map);
@@ -506,7 +516,6 @@ module powerbi.visuals {
 
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
             var instances: VisualObjectInstance[] = [];
-            var dataView = this.dataView;
             switch (options.objectName) {
                 case 'general':
                     var general: VisualObjectInstance = {
@@ -514,8 +523,11 @@ module powerbi.visuals {
                         displayName: 'General',
                         selector: null,
                         properties: {
-                            fill: LeafletMap.getFill(dataView),
-                            pointRadius: LeafletMap.getPointRadius(dataView)
+                            pointFill: this.getFill(this.dataView, "point"),
+                            pointRadius: this.getPointRadius(this.dataView),
+                            lineFill: this.getFill(this.dataView, "line"),
+                            lineWidth: this.getLineWidth(this.dataView),
+                            polygonFill: this.getFill(this.dataView, "polygon")
                         }
                     };
                     instances.push(general);
@@ -525,31 +537,37 @@ module powerbi.visuals {
             return instances;
         }
 
-        private static getPointRadius(dataView: DataView): number {
-            if (dataView) {
-                var objects = dataView.metadata.objects;
-                if (objects) {
-                    var general = objects['general'];
-                    if (general) {
-                        var pointRadius = <number>general['pointRadius'];
-                        if (pointRadius)
-                            return pointRadius;
-                    }
+        private getPointRadius(dataView: DataView): number {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <number>general['pointRadius'];
                 }
             }
             return 5;
         }
 
-        private static getFill(dataView: DataView): Fill {
-            if (dataView) {
-                var objects = dataView.metadata.objects;
-                if (objects) {
-                    var general = objects['general'];
-                    if (general) {
-                        var fill = <Fill>general['fill'];
-                        if (fill)
-                            return fill;
-                    }
+        private getLineWidth(dataView: DataView): number {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <number>general['lineWidth'];
+                }
+            }
+            return 5;
+        }
+
+        private getFill(dataView: DataView, fillType): Fill {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (fillType === "point") {
+                    return <Fill>general['pointFill'];
+                }
+                else if (fillType === "line") {
+                    return <Fill>general['lineFill'];
+                }
+                else if (fillType === "polygon") {
+                    return <Fill>general['polygonFill'];
                 }
             }
             return { solid: { color: 'rgb(1, 184, 170)' } };
@@ -568,4 +586,3 @@ module powerbi.visuals.plugins {
         create: () => new LeafletMap()
     };
 }
-
