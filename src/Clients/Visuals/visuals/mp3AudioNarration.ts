@@ -45,21 +45,30 @@ module powerbi.visuals {
             }],
             objects: {
                 general: {
-                    displayName: data.createDisplayNameGetter('Visual_General'),
+                    displayName: 'Audio Options',
                     properties: {
                         formatString: {
                             type: { formatting: { formatString: true } },
                         },
-                        //mp3File: {
-                        //    type: { text: true },
-                        //    displayName: 'MP3 URL'
-                        //},
+                        loopOption: {
+                            type: { bool: true },
+                            displayName: 'Loop'
+                        },
+                        controlsOption: {
+                            type: { bool: true },
+                            displayName: 'Controls'
+                        },
+                        autoplayOption: {
+                            type: { bool: true },
+                            displayName: 'Autoplay'
+                        },
                     },
                 }
             },
+            suppressDefaultTitle: true,
         };
 
-        //private dataView: DataView;
+        private dataView: DataView;
 
         public static converter(dataView: DataView): any {
 
@@ -82,51 +91,91 @@ module powerbi.visuals {
 
         public update(options: VisualUpdateOptions) {
 
+            this.dataView = options.dataViews[0];
+
             var audioSource = MP3AudioNarration.converter(options.dataViews[0]);
-            //var audioSource = MP3Player.getFile(this.dataView);
+            var loopOption = this.getLoopOption(this.dataView);
+            var controlsOption = this.getControlsOption(this.dataView);
+            var autoplayOption = this.getAutoplayOption(this.dataView);
 
             var audio = d3.select("audio");
             audio.attr('src', audioSource);
             audio.attr('id', 'htmlAudio');
             audio.attr('type', 'audio/mpeg');
-            //audio.attr('autoplay', 'true');
-            audio.attr('loop', 'true');
-            audio.attr('controls', 'true');
+            if (loopOption === true) {
+                audio.attr('loop', 'loop');
+            }
+            else {
+                var player = $('#htmlAudio');
+                player.removeAttr('loop');
+            }
+            if (controlsOption === true) {
+                var player = $('#htmlAudio');
+                audio.attr('controls', 'controls');
+            }
+            else {
+                var player = $('#htmlAudio');
+                player.removeAttr('controls');
+            }
+            if (autoplayOption === true) {
+                audio.attr('autoplay', 'autoplay');
+            }
+            else {
+                var player = $('#htmlAudio');
+                player.removeAttr('autoplay');
+            }
         }
 
-        //private getFile(dataView: DataView): string {
-        //    if (dataView) {
-        //        var objects = dataView.metadata.objects;
-        //        if (objects) {
-        //            var general = objects['general'];
-        //            if (general) {
-        //                var mp3Source = <string>general['mp3Source'];
-        //                if (mp3Source)
-        //                    return mp3Source;
-        //            }
-        //        }
-        //    }
-        //    return 'http://fightmusic.com/mp3/big10/Michigan__Hail_To_The_Victors.mp3';
-        //}
+        public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
+            var instances: VisualObjectInstance[] = [];
+            switch (options.objectName) {
+                case 'general':
+                    var general: VisualObjectInstance = {
+                        objectName: 'general',
+                        displayName: 'Audio Options',
+                        selector: null,
+                        properties: {
+                            loopOption: this.getLoopOption(this.dataView),
+                            controlsOption: this.getControlsOption(this.dataView),
+                            autoplayOption: this.getAutoplayOption(this.dataView)
+                        }
+                    };
+                    instances.push(general);
+                    break;
+            }
 
-        //public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
-        //    var instances: VisualObjectInstance[] = [];
-        //    switch (options.objectName) {
-        //        case 'general':
-        //            var general: VisualObjectInstance = {
-        //                objectName: 'general',
-        //                displayName: 'General',
-        //                selector: null,
-        //                properties: {
-        //                    mp3File: this.getFile(this.dataView)
-        //                }
-        //            };
-        //            instances.push(general);
-        //            break;
-        //    }
+            return instances;
+        }
 
-        //    return instances;
-        //}
+        private getLoopOption(dataView: DataView): boolean {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <boolean>general['loopOption'];
+                }
+            }
+            return true;
+        }
+
+        private getControlsOption(dataView: DataView): boolean {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <boolean>general['controlsOption'];
+                }
+            }
+            return true;
+        }
+
+        private getAutoplayOption(dataView: DataView): boolean {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <boolean>general['autoplayOption'];
+                }
+            }
+            return false;
+        }
     }
 }
 
