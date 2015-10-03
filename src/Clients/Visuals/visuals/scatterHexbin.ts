@@ -270,7 +270,7 @@ module powerbi.visuals {
             var xMeta = this.dataView.metadata.columns[colMetaIndex.x].displayName;
             var yMeta = this.dataView.metadata.columns[colMetaIndex.y].displayName;
 
-            //var selectionManager = this.selectionManager;
+            var selectionManager = this.selectionManager;
 
             var xScale = d3.scale.linear()
                 .domain(d3.extent(chartData, function (d) {
@@ -350,7 +350,19 @@ module powerbi.visuals {
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); });
             
-                //dot.on("click", function (d) { window.alert("Clicked a dot: Details = " + JSON.stringify(d)); });
+                dot.on("click", function (d) {
+                    console.log('dot clicked');
+                    console.log(d);
+                    selectionManager.select(d.selector).then(ids => {
+                        if (ids.length > 0) {
+                            dot.style('opacity', 1);
+                            d3.select(this).style('opacity', 1);
+                        }
+                        else {
+                            dot.style('opacity', 1);
+                        }
+                    });
+                });
 
                 dot.exit()
                     .transition()
