@@ -43,12 +43,8 @@ module powerbi.visuals {
         xValue: number;
         yValue: number;
         sizeValue: number;
-        categoryMeta: string;
-        xMeta: string;
-        yMeta: string;
-        sizeValueMeta: string;
         selector: SelectionId;
-        toolTipInfo: TooltipDataItem[];
+        tooltipInfo: TooltipDataItem[];
     };
 
     export class ScatterHexbin implements IVisual {
@@ -112,84 +108,78 @@ module powerbi.visuals {
         private selectionManager: SelectionManager;
         private dataView: DataView;
 
-        public static converter(dataView: DataView): any {
+        public static converter(dataView: DataView): ScatterHexbinData[] {
             //console.log('converter');
             //console.log(dataView);
-            
-            var catMetaData = dataView.metadata;
-            var catTable = dataView.table;
-            var category = null;
-            var xValue = null;
-            var yValue = null;
-            var sizeValue = null;
-            var categoryMeta = null;
-            var xMeta = null;
-            var yMeta = null;
-            var sizeValueMeta = null;
 
-            //Metadata "roles" currently exist in production but not in Playground. 
-            if (catMetaData.columns[0].roles) {
-                var colIndex = {
-                    category: null,
-                    x: null,
-                    y: null,
-                    value: null
-                };
+            var catDv: DataViewCategorical = dataView.categorical;
+            var cat = catDv.categories[0];
+            var catValues = cat.values;
+            var values = catDv.values;
 
-                for (var i in dataView.metadata.columns) {
-                    var cols = catMetaData.columns[i].roles;
+            var formatStringProp = <DataViewObjectPropertyIdentifier>{ objectName: 'general', propertyName: 'formatString' };
+            var categorySourceFormatString = valueFormatter.getFormatString(cat.source, formatStringProp);
+
+            var dataArray: ScatterHexbinData[] = [];
+
+            var colIndex = {
+                //category: null,
+                x: null,
+                y: null,
+                value: null
+            };
+
+            if (values[0].source.roles) {
+                for (var j = 0, len = values.length; j < len; j++) {
+                    //console.log(j);
+                    //console.log(values[j].source.roles);
+                    var cols = values[j].source.roles;
                     var colKey = Object.keys(cols);
-                    //console.log("Keys: " + colKey);
+                    console.log("Keys: " + colKey[0]);
                     //SWITCH not working but multiple IFs do
-                    if (colKey[0] === "Category") { colIndex.category = i; }
-                    if (colKey[0] === "X") { colIndex.x = i; }
-                    if (colKey[0] === "Y") { colIndex.y = i; }
-                    if (colKey[0] === "Value") { colIndex.value = i; }
+                    //if (colKey[0] === "Category") { colIndex.category = j; }
+                    if (colKey[0] === "X") { colIndex.x = j; }
+                    if (colKey[0] === "Y") { colIndex.y = j; }
+                    if (colKey[0] === "Value") { colIndex.value = j; }
+                    console.log(colIndex);
                 }
             }
+            else {
+                colIndex = { "x": 0, "y": 1, "value": 2 };
+            }
 
-            var data: ScatterHexbinData;
-            var dataArray = [];
+            for (var i = 0, len = catValues.length; i < len; i++) {
+                var formattedCategoryValue = valueFormatter.format(catValues[i], categorySourceFormatString);
 
-            for (var i in dataView.table.rows) {
-                if (!catMetaData.columns[0].roles) {
-                    category = catTable.rows[i][0];
-                    xValue = catTable.rows[i][1];
-                    yValue = catTable.rows[i][2];
-                    sizeValue = !catTable.rows[i][3] ? 1 : catTable.rows[i][3];
-                    categoryMeta = catMetaData.columns[0].displayName;
-                    xMeta = catMetaData.columns[1].displayName;
-                    yMeta = catMetaData.columns[2].displayName;
-                    sizeValueMeta = !catTable.rows[i][3] ? "" : catMetaData.columns[3].displayName;
+                var tooltipInfo: TooltipDataItem[] = TooltipBuilder.createTooltipInfo(
+                    formatStringProp,
+                    catDv.categories, formattedCategoryValue,
+                    values,
+                    values[0].values[i],
+                    null,
+                    0);
+
+                if (values.length > 1) {
+                    var toolTip = TooltipBuilder.createTooltipInfo(
+                        formatStringProp,
+                        catDv.categories, formattedCategoryValue,
+                        values,
+                        values[1].values[i],
+                        null,
+                        1)[1];
+                    if (toolTip) {
+                        tooltipInfo.push(toolTip);
+                    }
                 }
-                else {
-                    category = catTable.rows[i][colIndex.category];
-                    xValue = catTable.rows[i][colIndex.x];
-                    yValue = catTable.rows[i][colIndex.y];
-                    sizeValue = !catTable.rows[i][3] ? 1 : catTable.rows[i][colIndex.value];
-                    categoryMeta = catMetaData.columns[colIndex.category].displayName;
-                    xMeta = catMetaData.columns[colIndex.x].displayName;
-                    yMeta = catMetaData.columns[colIndex.y].displayName;
-                    sizeValueMeta = !catTable.rows[i][3] ? "" : catMetaData.columns[colIndex.value];
-                }
 
-                data = {
-                    category: category,
-                    xValue: xValue,
-                    yValue: yValue,
-                    sizeValue: sizeValue,
-                    categoryMeta: categoryMeta,
-                    xMeta: xMeta,
-                    yMeta: yMeta,
-                    sizeValueMeta: sizeValueMeta,
-                    selector: SelectionId.createWithId(dataView.categorical.categories[0].identity[0]),
-                    toolTipInfo: [{
-                        displayName: category,
-                        value: xMeta + ": " + xValue + ", " + yMeta + ": " + yValue + ", " + sizeValueMeta + ": " + sizeValue
-                    }]
-                };
-                dataArray.push(data);
-                //console.log(dataArray);
+                dataArray.push({
+                    category: catValues[i],
+                    xValue: values[0].values[i],
+                    yValue: values.length > 1 ? values[colIndex.y].values[i] : 1,
+                    sizeValue: values.length > 2 ? values[colIndex.value].values[i] : 1,
+                    selector: SelectionId.createWithId(cat.identity[i]),
+                    tooltipInfo: tooltipInfo
+                });
             }
 
             return dataArray;
@@ -243,6 +233,30 @@ module powerbi.visuals {
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
+			
+            var colMetaIndex = {
+                category: null,
+                x: null,
+                y: null,
+                value: null
+            };
+
+            if (this.dataView.metadata.columns[0].roles) {
+                var meta = this.dataView.metadata.columns;
+                for (var j in meta) {
+                    var cols = meta[j].roles;
+                    var colKey = Object.keys(cols);
+                    //console.log("Keys: " + colKey[0]);
+                    //SWITCH not working but multiple IFs do
+                    if (colKey[0] === "Category") { colMetaIndex.category = j; }
+                    if (colKey[0] === "X") { colMetaIndex.x = j; }
+                    if (colKey[0] === "Y") { colMetaIndex.y = j; }
+                    if (colKey[0] === "Value") { colMetaIndex.value = j; }
+                }
+            }
+            else {
+                colMetaIndex = { "category": 0, "x": 1, "y": 2, "value": 3 };
+            }
 
             var margin = { top: 20, right: 0, bottom: 20, left: 50 };
             var w = $(".svgHexbinContainer").width() - margin.left;
@@ -253,8 +267,10 @@ module powerbi.visuals {
             var yAxisTicks = d3.select("#yAxis");
             var xAxisLabel = d3.select("#xAxisLabel");
             var yAxisLabel = d3.select("#yAxisLabel");
+            var xMeta = this.dataView.metadata.columns[colMetaIndex.x].displayName;
+            var yMeta = this.dataView.metadata.columns[colMetaIndex.y].displayName;
 
-            var selectionManager = this.selectionManager;
+            //var selectionManager = this.selectionManager;
 
             var xScale = d3.scale.linear()
                 .domain(d3.extent(chartData, function (d) {
@@ -288,7 +304,7 @@ module powerbi.visuals {
                 .attr("transform", "translate(" + (w / 2) + "," + (margin.bottom + 6) + ")")
                 .attr("dy", ".32em")
                 .style("text-anchor", "end")
-                .text(chartData[0].xMeta);
+                .text(xMeta);
 
             yAxisTicks
                 .attr("transform", "translate(" + margin.left + "," + 0 + ")")
@@ -299,7 +315,7 @@ module powerbi.visuals {
                 .attr("transform", "translate(" + (-margin.left + 6) + "," + (h / 2) + ") rotate(-90)")
                 .attr("dy", ".32em")
                 .style("text-anchor", "end")
-                .text(chartData[0].yMeta);
+                .text(yMeta);
 
             //TooltipManager.addTooltip(this.hexGroup, (tooltipEvent: TooltipEvent) => tooltipEvent.data.toolTipInfo);  
 
@@ -451,17 +467,17 @@ module powerbi.visuals {
                         return hexColor(getSaturation(d));
                     });
 
-                hex.on("click", function (d) {
-                    selectionManager.select(d[0].identity).then(ids => {
-                        if (ids.length > 0) {
-                            hex.style('opacity', 1);
-                            d3.select(this).style('opacity', 1);
-                        }
-                        else {
-                            hex.style('opacity', 1);
-                        }
-                    });
-                });
+                //hex.on("click", function (d) {
+                //    selectionManager.select(d[0].identity).then(ids => {
+                //        if (ids.length > 0) {
+                //            hex.style('opacity', 1);
+                //            d3.select(this).style('opacity', 1);
+                //        }
+                //        else {
+                //            hex.style('opacity', 1);
+                //        }
+                //    });
+                //});
                 //hex.on('click', function (d) {
                 //    console.log(d);
                 //    selectionManager
