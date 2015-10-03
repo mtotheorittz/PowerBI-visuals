@@ -153,8 +153,9 @@ module powerbi.visuals {
 
                 var tooltipInfo: TooltipDataItem[] = TooltipBuilder.createTooltipInfo(
                     formatStringProp,
-                    catDv.categories, formattedCategoryValue,
-                    values,
+                    dataView.categorical,
+                    formattedCategoryValue,
+                    values[0].values[i],
                     values[0].values[i],
                     null,
                     0);
@@ -162,8 +163,9 @@ module powerbi.visuals {
                 if (values.length > 1) {
                     var toolTip = TooltipBuilder.createTooltipInfo(
                         formatStringProp,
-                        catDv.categories, formattedCategoryValue,
-                        values,
+                        dataView.categorical,
+                        formattedCategoryValue,
+                        values[1].values[i],
                         values[1].values[i],
                         null,
                         1)[1];
@@ -172,9 +174,23 @@ module powerbi.visuals {
                     }
                 }
 
+                if (values.length > 2) {
+                    var toolTip = TooltipBuilder.createTooltipInfo(
+                        formatStringProp,
+                        dataView.categorical,
+                        formattedCategoryValue,
+                        values[2].values[i],
+                        values[2].values[i],
+                        null,
+                        2)[1];
+                    if (toolTip) {
+                        tooltipInfo.push(toolTip);
+                    }
+                }
+
                 dataArray.push({
                     category: catValues[i],
-                    xValue: values[0].values[i],
+                    xValue: values[colIndex.x].values[i],
                     yValue: values.length > 1 ? values[colIndex.y].values[i] : 1,
                     sizeValue: values.length > 2 ? values[colIndex.value].values[i] : 1,
                     selector: SelectionId.createWithId(cat.identity[i]),
@@ -233,7 +249,7 @@ module powerbi.visuals {
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
-			
+
             var colMetaIndex = {
                 category: null,
                 x: null,
@@ -349,7 +365,7 @@ module powerbi.visuals {
                     .duration(2000)
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); });
-            
+
                 dot.on("click", function (d) {
                     console.log('dot clicked');
                     console.log(d);
@@ -368,6 +384,8 @@ module powerbi.visuals {
                     .transition()
                     .duration(2000)
                     .remove();
+
+                TooltipManager.addTooltip(dot, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo);
             }
 
             function makeHexbins() {
