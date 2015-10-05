@@ -135,13 +135,13 @@ module powerbi.visuals {
                     //console.log(values[j].source.roles);
                     var cols = values[j].source.roles;
                     var colKey = Object.keys(cols);
-                    console.log("Keys: " + colKey[0]);
+                    //console.log("Keys: " + colKey[0]);
                     //SWITCH not working but multiple IFs do
                     //if (colKey[0] === "Category") { colIndex.category = j; }
                     if (colKey[0] === "X") { colIndex.x = j; }
                     if (colKey[0] === "Y") { colIndex.y = j; }
                     if (colKey[0] === "Value") { colIndex.value = j; }
-                    console.log(colIndex);
+                    //console.log(colIndex);
                 }
             }
             else {
@@ -247,7 +247,7 @@ module powerbi.visuals {
 
             this.dataView = options.dataViews[0];
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
-            console.log(chartData);
+            //console.log(chartData);
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
 
@@ -345,6 +345,10 @@ module powerbi.visuals {
                 return d.yValue;
             }
 
+            function getSizeValue(d): number {
+                return d.sizeValue;
+            }
+
             function makeDots() {
                 var dot = dotGroup.selectAll(".dot")
                     .data(chartData);
@@ -367,7 +371,7 @@ module powerbi.visuals {
 
                 dot.on("click", function (d) {
                     console.log('dot clicked');
-                    console.log(d);
+                    //console.log(d);
                     selectionManager.select(d.selector).then(ids => {
                         if (ids.length > 0) {
                             dot.style('opacity', 1);
@@ -430,7 +434,25 @@ module powerbi.visuals {
                         }
                     });
 
-                    return d3.values(binsById);
+                    //return d3.values(binsById);
+                    var addStats = d3.values(binsById);
+                    for (var i in addStats) {
+                        var agg = d3.nest()
+                            .rollup(function (leaves) {
+                                return {
+                                    binCount: leaves.length,
+                                    xMean: d3.mean(leaves, function (d) { return getXValue(d); }),
+                                    yMean: d3.mean(leaves, function (d) { return getYValue(d); }),
+                                    valueSum: d3.sum(leaves, function (d) { return getSizeValue(d); }),
+                                    valueMean: d3.mean(leaves, function (d) { return getSizeValue(d); }),
+                                };
+                            })
+                            .entries(addStats[i]);
+                        //console.log(agg);
+                        addStats[i].stats = agg;
+                    }
+                    //console.log(addStats);
+                    return addStats;
                 }
 
                 function buildHexagon(radius) {
@@ -447,28 +469,11 @@ module powerbi.visuals {
                     });
                 }
 
-                function getSaturation(data) {
-                    var aggSize = 0;
-                    for (var j in data) {
-                        if (typeof data[j] === "object") {
-                            //console.log('j value');
-                            //console.log(hexData[i][j].sizeValue);
-                            if (data[j].sizeValue === 1) {
-                                aggSize = aggSize + 1;
-                            }
-                            else {
-                                aggSize = aggSize + data[j].sizeValue;
-                            }
-                        }
-                    }
-                    return aggSize;
-                }
-
                 var hexData = assignHexbin(chartData, hexRadius);
                 var fill = fillColor;
 
                 var hexColor = d3.scale.linear()
-                    .domain(d3.extent(hexData, function (d) { var v = getSaturation(d); return v; })).nice()
+                    .domain(d3.extent(hexData, function (d) { return d.stats.valueSum; })).nice()
                     .range(["rgb(233, 233, 233)", fill])
                     .interpolate(d3.interpolateLab);
 
@@ -480,7 +485,7 @@ module powerbi.visuals {
                     .attr("class", "hexagon")
                     .attr("d", buildHexagon(hexRadius))
                     .attr("transform", function (d) { return "translate(" + (d.x + margin.left) + "," + (d.y) + ")"; })
-                    .style("fill", function (d) { return hexColor(getSaturation(d)); })
+                    .style("fill", function (d) { return hexColor(d.stats.valueSum); })//d.valueSum); })
                 //.style("fill-opacity", ".8")
                     .style("stroke", "#FFFFFF")
                     .style("stroke-width", "1px");
@@ -492,7 +497,7 @@ module powerbi.visuals {
                         return "translate(" + (d.x + margin.left) + "," + (d.y) + ")";
                     })
                     .style("fill", function (d) {
-                        return hexColor(getSaturation(d));
+                        return hexColor(d.stats.valueSum);//valueSum);
                     });
 
                 hex.exit()
@@ -503,7 +508,11 @@ module powerbi.visuals {
                 for (var i in hexData) {
                     hexData[i].tooltipInfo = [
                         { displayName: "Bin statistics", value: "" },
-                        { displayName: "Count", value: hexData[i].length }
+                        { displayName: "Count", value: hexData[i].stats.binCount },
+                        { displayName: "Mean " + xMeta, value: hexData[i].stats.xMean },
+                        { displayName: "Mean " + yMeta, value: hexData[i].stats.yMean },
+                        { displayName: "Sum of Value", value: hexData[i].stats.valueSum },
+                        { displayName: "Mean Value", value: hexData[i].stats.valueMean },
                     ];
                 }
 
