@@ -247,6 +247,7 @@ module powerbi.visuals {
 
             this.dataView = options.dataViews[0];
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
+            console.log(chartData);
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
 
@@ -332,8 +333,6 @@ module powerbi.visuals {
                 .attr("dy", ".32em")
                 .style("text-anchor", "end")
                 .text(yMeta);
-
-            //TooltipManager.addTooltip(this.hexGroup, (tooltipEvent: TooltipEvent) => tooltipEvent.data.toolTipInfo);  
 
             makeHexbins();
             makeDots();
@@ -466,7 +465,6 @@ module powerbi.visuals {
                 }
 
                 var hexData = assignHexbin(chartData, hexRadius);
-                //console.log('hexData: ' + JSON.stringify(hexData));
                 var fill = fillColor;
 
                 var hexColor = d3.scale.linear()
@@ -497,29 +495,19 @@ module powerbi.visuals {
                         return hexColor(getSaturation(d));
                     });
 
-                //hex.on("click", function (d) {
-                //    selectionManager.select(d[0].identity).then(ids => {
-                //        if (ids.length > 0) {
-                //            hex.style('opacity', 1);
-                //            d3.select(this).style('opacity', 1);
-                //        }
-                //        else {
-                //            hex.style('opacity', 1);
-                //        }
-                //    });
-                //});
-                //hex.on('click', function (d) {
-                //    console.log(d);
-                //    selectionManager
-                //        .select(d.selector);
-                //    //.then(ids => d3.select(this).style('stroke-width', ids.length > 0 ? '2px' : '0px'));
-                //}).data(chartData);
-                //hex.on("click", function (d) { window.alert("clicked a hexagon: Count = " + d.length + " Details = " + JSON.stringify(d));});
-                
                 hex.exit()
                     .transition()
                     .duration(2000)
                     .remove();
+
+                for (var i in hexData) {
+                    hexData[i].tooltipInfo = [
+                        { displayName: "Bin statistics", value: "" },
+                        { displayName: "Count", value: hexData[i].length }
+                    ];
+                }
+
+                TooltipManager.addTooltip(hex, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo);
             }
 
             //random jQuery CSS...
