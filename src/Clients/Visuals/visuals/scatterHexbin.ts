@@ -101,8 +101,6 @@ module powerbi.visuals {
             },
         };
 
-        //private element: JQuery;
-        //private viewPort: IViewport;
         private svg: D3.Selection;
         private hexGroup: D3.Selection;
         private selectionManager: SelectionManager;
@@ -123,7 +121,6 @@ module powerbi.visuals {
             var dataArray: ScatterHexbinData[] = [];
 
             var colIndex = {
-                //category: null,
                 x: null,
                 y: null,
                 value: null
@@ -131,17 +128,12 @@ module powerbi.visuals {
 
             if (values[0].source.roles) {
                 for (var j = 0, len = values.length; j < len; j++) {
-                    //console.log(j);
-                    //console.log(values[j].source.roles);
                     var cols = values[j].source.roles;
                     var colKey = Object.keys(cols);
-                    //console.log("Keys: " + colKey[0]);
                     //SWITCH not working but multiple IFs do
-                    //if (colKey[0] === "Category") { colIndex.category = j; }
                     if (colKey[0] === "X") { colIndex.x = j; }
                     if (colKey[0] === "Y") { colIndex.y = j; }
                     if (colKey[0] === "Value") { colIndex.value = j; }
-                    //console.log(colIndex);
                 }
             }
             else {
@@ -238,8 +230,8 @@ module powerbi.visuals {
         }
 
         public update(options: VisualUpdateOptions) {
-            console.log('update');
-            console.log(options);
+            //console.log('update');
+            //console.log(options);
 
             d3.select(".svgHexbinContainer")
                 .attr("height", options.viewport.height)
@@ -247,7 +239,6 @@ module powerbi.visuals {
 
             this.dataView = options.dataViews[0];
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
-            //console.log(chartData);
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
 
@@ -263,7 +254,6 @@ module powerbi.visuals {
                 for (var j in meta) {
                     var cols = meta[j].roles;
                     var colKey = Object.keys(cols);
-                    //console.log("Keys: " + colKey[0]);
                     //SWITCH not working but multiple IFs do
                     if (colKey[0] === "Category") { colMetaIndex.category = j; }
                     if (colKey[0] === "X") { colMetaIndex.x = j; }
@@ -286,6 +276,8 @@ module powerbi.visuals {
             var yAxisLabel = d3.select("#yAxisLabel");
             var xMeta = this.dataView.metadata.columns[colMetaIndex.x].displayName;
             var yMeta = this.dataView.metadata.columns[colMetaIndex.y].displayName;
+            var valueMeta = (!this.dataView.metadata.columns[colMetaIndex.value])
+                ? "Value" : this.dataView.metadata.columns[colMetaIndex.value].displayName;
 
             var selectionManager = this.selectionManager;
 
@@ -311,7 +303,6 @@ module powerbi.visuals {
             var yAxis = d3.svg.axis()
                 .scale(yScale)
                 .orient("left");
-            //.ticks(5);
 
             xAxisTicks
                 .attr("transform", "translate(" + margin.left + "," + (h - margin.bottom) + ")")
@@ -360,9 +351,7 @@ module powerbi.visuals {
                     .attr("r", "3px")
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); })
-                //.attr("cy", "0")
                     .style("fill", "grey");
-                //.style("fill", function(d) { return color(d.category); })
 
                 dot.transition()
                     .duration(2000)
@@ -371,7 +360,6 @@ module powerbi.visuals {
 
                 dot.on("click", function (d) {
                     console.log('dot clicked');
-                    //console.log(d);
                     selectionManager.select(d.selector).then(ids => {
                         if (ids.length > 0) {
                             dot.style('opacity', 1);
@@ -434,7 +422,6 @@ module powerbi.visuals {
                         }
                     });
 
-                    //return d3.values(binsById);
                     var addStats = d3.values(binsById);
                     for (var i in addStats) {
                         var agg = d3.nest()
@@ -445,13 +432,14 @@ module powerbi.visuals {
                                     yMean: d3.mean(leaves, function (d) { return getYValue(d); }),
                                     valueSum: d3.sum(leaves, function (d) { return getSizeValue(d); }),
                                     valueMean: d3.mean(leaves, function (d) { return getSizeValue(d); }),
+                                    valueMedian: d3.median(leaves, function (d) { return getSizeValue(d); }),
+                                    valueMin: d3.min(leaves, function (d) { return getSizeValue(d); }),
+                                    valueMax: d3.max(leaves, function (d) { return getSizeValue(d); }),
                                 };
                             })
                             .entries(addStats[i]);
-                        //console.log(agg);
                         addStats[i].stats = agg;
                     }
-                    //console.log(addStats);
                     return addStats;
                 }
 
@@ -485,8 +473,7 @@ module powerbi.visuals {
                     .attr("class", "hexagon")
                     .attr("d", buildHexagon(hexRadius))
                     .attr("transform", function (d) { return "translate(" + (d.x + margin.left) + "," + (d.y) + ")"; })
-                    .style("fill", function (d) { return hexColor(d.stats.valueSum); })//d.valueSum); })
-                //.style("fill-opacity", ".8")
+                    .style("fill", function (d) { return hexColor(d.stats.valueSum); })
                     .style("stroke", "#FFFFFF")
                     .style("stroke-width", "1px");
 
@@ -497,7 +484,7 @@ module powerbi.visuals {
                         return "translate(" + (d.x + margin.left) + "," + (d.y) + ")";
                     })
                     .style("fill", function (d) {
-                        return hexColor(d.stats.valueSum);//valueSum);
+                        return hexColor(d.stats.valueSum);
                     });
 
                 hex.exit()
@@ -506,20 +493,32 @@ module powerbi.visuals {
                     .remove();
 
                 for (var i in hexData) {
-                    hexData[i].tooltipInfo = [
-                        { displayName: "Bin statistics", value: "" },
-                        { displayName: "Count", value: hexData[i].stats.binCount },
-                        { displayName: "Mean " + xMeta, value: hexData[i].stats.xMean },
-                        { displayName: "Mean " + yMeta, value: hexData[i].stats.yMean },
-                        { displayName: "Sum of Value", value: hexData[i].stats.valueSum },
-                        { displayName: "Mean Value", value: hexData[i].stats.valueMean },
-                    ];
+                    if (valueMeta === "Value") {
+                        hexData[i].tooltipInfo = [
+                            { displayName: "Bin statistics", value: "" },
+                            { displayName: "Count", value: hexData[i].stats.binCount },
+                            { displayName: "Mean " + xMeta, value: hexData[i].stats.xMean },
+                            { displayName: "Mean " + yMeta, value: hexData[i].stats.yMean },
+                        ];
+                    }
+                    else {
+                        hexData[i].tooltipInfo = [
+                            { displayName: "Bin statistics", value: "" },
+                            { displayName: "Count", value: hexData[i].stats.binCount },
+                            { displayName: "Mean " + xMeta, value: hexData[i].stats.xMean },
+                            { displayName: "Mean " + yMeta, value: hexData[i].stats.yMean },
+                            { displayName: "Sum of " + valueMeta, value: hexData[i].stats.valueSum },
+                            { displayName: "Minimum " + valueMeta, value: hexData[i].stats.valueMin },
+                            { displayName: "Mean " + valueMeta, value: hexData[i].stats.valueMean },
+                            { displayName: "Median " + valueMeta, value: hexData[i].stats.valueMedian },
+                            { displayName: "Maximum " + valueMeta, value: hexData[i].stats.valueMax },
+                        ];
+                    }
                 }
-
                 TooltipManager.addTooltip(hex, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo);
             }
 
-            //random jQuery CSS...
+            //Additional CSS
             $(".axis path").css({ "fill": "none", "stroke": "none", "shape-rendering": "crispEdges" });
             $(".axis line").css({ "fill": "none", "stroke": "grey", "shape-rendering": "crispEdges" });
             $(".axis text").css({ "fill": "black", "font-size": "11px", "font-family": "wf_segoe-ui_normal,helvetica,arial,sans-serif" });
