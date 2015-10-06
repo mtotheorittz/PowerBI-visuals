@@ -103,6 +103,11 @@ module powerbi.visuals {
 
         private svg: D3.Selection;
         private hexGroup: D3.Selection;
+        private dotGroup: D3.Selection;
+        private xAxisTicks: D3.Selection;
+        private yAxisTicks: D3.Selection;
+        private xAxisLabel: D3.Selection;
+        private yAxisLabel: D3.Selection;
         private selectionManager: SelectionManager;
         private dataView: DataView;
 
@@ -207,22 +212,22 @@ module powerbi.visuals {
             this.hexGroup = mainChart.append("g")
                 .attr("class", "hexGroup");
 
-            mainChart.append("g")
+            this.dotGroup = mainChart.append("g")
                 .attr("class", "dotGroup");
 
-            var xAxisTicks = mainChart.append("g")
+            var xAxisTicks = this.xAxisTicks = mainChart.append("g")
                 .attr("class", "axis")
                 .attr("id", "xAxis");
 
-            var yAxisTicks = mainChart.append("g")
+            var yAxisTicks = this.yAxisTicks = mainChart.append("g")
                 .attr("class", "axis")
                 .attr("id", "yAxis");
 
-            xAxisTicks.append("text")
+            this.xAxisLabel = xAxisTicks.append("text")
                 .attr("class", "label")
                 .attr("id", "xAxisLabel");
 
-            yAxisTicks.append("text")
+            this.yAxisLabel = yAxisTicks.append("text")
                 .attr("class", "label")
                 .attr("id", "yAxisLabel");
 
@@ -233,7 +238,7 @@ module powerbi.visuals {
             //console.log('update');
             //console.log(options);
 
-            d3.select(".svgHexbinContainer")
+            this.svg
                 .attr("height", options.viewport.height)
                 .attr("width", options.viewport.width);
 
@@ -266,14 +271,14 @@ module powerbi.visuals {
             }
 
             var margin = { top: 20, right: 0, bottom: 20, left: 50 };
-            var w = $(".svgHexbinContainer").width() - margin.left;
-            var h = $(".svgHexbinContainer").height() - margin.bottom;
-            var hexGroup = d3.select(".hexGroup");
-            var dotGroup = d3.select(".dotGroup");
-            var xAxisTicks = d3.select("#xAxis");
-            var yAxisTicks = d3.select("#yAxis");
-            var xAxisLabel = d3.select("#xAxisLabel");
-            var yAxisLabel = d3.select("#yAxisLabel");
+            var w = options.viewport.width - margin.left;
+            var h = options.viewport.height - margin.bottom;
+            var hexGroup = this.hexGroup;
+            var dotGroup = this.dotGroup;
+            var xAxisTicks = this.xAxisTicks;
+            var yAxisTicks = this.yAxisTicks;
+            var xAxisLabel = this.xAxisLabel;
+            var yAxisLabel = this.yAxisLabel;
             var xMeta = this.dataView.metadata.columns[colMetaIndex.x].displayName;
             var yMeta = this.dataView.metadata.columns[colMetaIndex.y].displayName;
             var valueMeta = (!this.dataView.metadata.columns[colMetaIndex.value])
@@ -566,7 +571,7 @@ module powerbi.visuals {
         }
 
         public destroy() {
-            d3.select(".svgHexbinContainer").remove();
+            this.svg.remove();
         }
 
     }
