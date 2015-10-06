@@ -53,7 +53,8 @@ module powerbi.visuals {
             dataRoles: [
                 {
                     name: "Category",
-                    kind: VisualDataRoleKind.Grouping
+                    kind: VisualDataRoleKind.Grouping,
+                    displayName: "Details"
                 },
                 {
                     name: "X",
