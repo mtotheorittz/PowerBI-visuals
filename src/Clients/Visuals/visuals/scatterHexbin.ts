@@ -359,7 +359,7 @@ module powerbi.visuals {
                     .style("fill", "grey");
 
                 dot.transition()
-                    .duration(2000)
+                    .duration(1000)
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); });
 
@@ -378,7 +378,7 @@ module powerbi.visuals {
 
                 dot.exit()
                     .transition()
-                    .duration(2000)
+                    .duration(1000)
                     .remove();
 
                 TooltipManager.addTooltip(dot, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo);
@@ -483,7 +483,7 @@ module powerbi.visuals {
                     .style("stroke-width", "1px");
 
                 hex.transition()
-                    .duration(2000)
+                    .duration(1000)
                     .attr("d", buildHexagon(hexRadius))
                     .attr("transform", function (d) {
                         return "translate(" + (d.x + margin.left) + "," + (d.y) + ")";
@@ -494,7 +494,7 @@ module powerbi.visuals {
 
                 hex.exit()
                     .transition()
-                    .duration(2000)
+                    .duration(1000)
                     .remove();
 
                 for (var i in hexData) {
