@@ -2,6 +2,7 @@
  *  Power BI Visualizations
  *  
  *  HTML5 MP3 Audio Narration
+ *  v1.0.1
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -25,7 +26,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  *
+ *  Acknowledgements:
+ *  +JMJ+
  */
+
+/* Please make sure that this path is correct */
+/// <reference path="../_references.ts"/>
 
 module powerbi.visuals {
     export class MP3AudioNarration implements IVisual {
@@ -34,7 +40,7 @@ module powerbi.visuals {
                 {
                     name: 'Category',
                     kind: powerbi.VisualDataRoleKind.Grouping,
-                    displayName: 'MP3 Audio URL'
+                    displayName: 'Insert Any Field for Audio Options'
                 },
             ],
             dataViewMappings: [{
@@ -49,6 +55,10 @@ module powerbi.visuals {
                     properties: {
                         formatString: {
                             type: { formatting: { formatString: true } },
+                        },
+                        mp3Url: {
+                            type: { text: true },
+                            displayName: 'MP3 URL'
                         },
                         loopOption: {
                             type: { bool: true },
@@ -71,16 +81,7 @@ module powerbi.visuals {
         private dataView: DataView;
 
         public static converter(dataView: DataView): any {
-
-            var audioFileValue = null;
-            if (!dataView.table.rows[1]) {
-                audioFileValue = 'http://fightmusic.com/mp3/big10/Michigan__Hail_To_The_Victors.mp3';
-            }
-            else {
-                audioFileValue = dataView.table.rows[1];
-            }
-
-            return audioFileValue;
+            return {};
         }
 
         public init(options: VisualInitOptions): void {
@@ -92,8 +93,9 @@ module powerbi.visuals {
         public update(options: VisualUpdateOptions) {
 
             this.dataView = options.dataViews[0];
+            this.dataView.categorical.categories[0].source = { displayName: "asdf", value: "asdf" };
 
-            var audioSource = MP3AudioNarration.converter(options.dataViews[0]);
+            var audioSource = this.getAudioSource(this.dataView);
             var loopOption = this.getLoopOption(this.dataView);
             var controlsOption = this.getControlsOption(this.dataView);
             var autoplayOption = this.getAutoplayOption(this.dataView);
@@ -135,6 +137,7 @@ module powerbi.visuals {
                         displayName: 'Audio Options',
                         selector: null,
                         properties: {
+                            mp3Url: this.getAudioSource(this.dataView),
                             loopOption: this.getLoopOption(this.dataView),
                             controlsOption: this.getControlsOption(this.dataView),
                             autoplayOption: this.getAutoplayOption(this.dataView)
@@ -145,6 +148,16 @@ module powerbi.visuals {
             }
 
             return instances;
+        }
+
+        private getAudioSource(dataView: DataView): string {
+            if (dataView && dataView.metadata.objects) {
+                var general = dataView.metadata.objects['general'];
+                if (general) {
+                    return <string>general['mp3Url'];
+                }
+            }
+            return "";
         }
 
         private getLoopOption(dataView: DataView): boolean {
