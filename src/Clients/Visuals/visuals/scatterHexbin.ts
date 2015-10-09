@@ -2,6 +2,7 @@
  *  Power BI Visualizations
  *  
  *  Hexbin Scatterplot 
+ *  v0.9.1
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -25,10 +26,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  *
- *  Acknowledgements
+ *  Acknowledgements:
  *  Calculations for bin assignment and hexagon placement found in assignHexbin()
  *      and buildHexagon() adapted from the d3.hexbin plugin: 
  *      https://github.com/d3/d3-plugins/tree/master/hexbin
+ *
+ *  +JMJ+
  */
 
 /* Please make sure that this path is correct */
@@ -96,7 +99,7 @@ module powerbi.visuals {
                         hexRadius: {
                             type: { numeric: true },
                             displayName: 'Bin radius'
-                        }
+                        },
                     },
                 }
             },
@@ -247,6 +250,8 @@ module powerbi.visuals {
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
+            var transitionDuration = 1000;
+            var dotSize = "2px";
 
             var colMetaIndex = {
                 category: null,
@@ -333,6 +338,7 @@ module powerbi.visuals {
 
             makeHexbins();
             makeDots();
+            layRugs();
 
             function getXValue(d): number {
                 return d.xValue;
@@ -354,13 +360,13 @@ module powerbi.visuals {
                     .append("circle")
                     .attr("class", "dot")
                     .attr("transform", "translate(" + margin.left + "," + 0 + ")")
-                    .attr("r", "3px")
+                    .attr("r", dotSize)
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); })
                     .style("fill", "grey");
 
                 dot.transition()
-                    .duration(1000)
+                    .duration(transitionDuration)
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); });
 
@@ -379,10 +385,64 @@ module powerbi.visuals {
 
                 dot.exit()
                     .transition()
-                    .duration(1000)
+                    .duration(transitionDuration)
                     .remove();
 
                 TooltipManager.addTooltip(dot, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo);
+            }
+
+            function layRugs() {
+                var xRug = dotGroup.selectAll(".x-rug")
+                    .data(chartData);
+
+                var yRug = dotGroup.selectAll(".y-rug")
+                    .data(chartData);
+
+                xRug.enter()
+                    .append("line")
+                    .attr("class", "x-rug")
+                    .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+                    .attr("x1", function (d) { var v = getXValue(d); return xScale(v); })
+                    .attr("y1", options.viewport.height - (margin.bottom * 2))
+                    .attr("x2", function (d) { var v = getXValue(d); return xScale(v); })
+                    .attr("y2", options.viewport.height - (margin.bottom * 2) - 5)
+                    .style("stroke", "grey")
+                    .style("stroke-width", "1px");
+
+                xRug.transition()
+                    .duration(100)
+                    .attr("x1", function (d) { var v = getXValue(d); return xScale(v); })
+                    .attr("y1", options.viewport.height - (margin.bottom * 2))
+                    .attr("x2", function (d) { var v = getXValue(d); return xScale(v); })
+                    .attr("y2", options.viewport.height - (margin.bottom * 2) - 5);
+
+                xRug.exit()
+                    .transition()
+                    .duration(100)
+                    .remove();
+
+                yRug.enter()
+                    .append("line")
+                    .attr("class", "x-rug")
+                    .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+                    .attr("x1", 0)
+                    .attr("y1", function (d) { var v = getYValue(d); return yScale(v); })
+                    .attr("x2", 5)
+                    .attr("y2", function (d) { var v = getYValue(d); return yScale(v); })
+                    .style("stroke", "grey")
+                    .style("stroke-width", "1px");
+
+                yRug.transition()
+                    .duration(100)
+                    .attr("x1", 0)
+                    .attr("y1", function (d) { var v = getYValue(d); return yScale(v); })
+                    .attr("x2", 5)
+                    .attr("y2", function (d) { var v = getYValue(d); return yScale(v); });
+
+                yRug.exit()
+                    .transition()
+                    .duration(100)
+                    .remove();
             }
 
             function makeHexbins() {
@@ -484,7 +544,7 @@ module powerbi.visuals {
                     .style("stroke-width", "1px");
 
                 hex.transition()
-                    .duration(1000)
+                    .duration(transitionDuration)
                     .attr("d", buildHexagon(hexRadius))
                     .attr("transform", function (d) {
                         return "translate(" + (d.x + margin.left) + "," + (d.y) + ")";
@@ -495,9 +555,9 @@ module powerbi.visuals {
 
                 hex.exit()
                     .transition()
-                    .duration(1000)
+                    .duration(transitionDuration)
                     .remove();
-
+                
                 for (var i in hexData) {
                     if (valueMeta === "Value") {
                         hexData[i].tooltipInfo = [
@@ -514,9 +574,9 @@ module powerbi.visuals {
                             { displayName: "Mean " + xMeta, value: hexData[i].stats.xMean },
                             { displayName: "Mean " + yMeta, value: hexData[i].stats.yMean },
                             { displayName: "Sum of " + valueMeta, value: hexData[i].stats.valueSum },
-                            { displayName: "Minimum " + valueMeta, value: hexData[i].stats.valueMin },
                             { displayName: "Mean " + valueMeta, value: hexData[i].stats.valueMean },
                             { displayName: "Median " + valueMeta, value: hexData[i].stats.valueMedian },
+                            { displayName: "Minimum " + valueMeta, value: hexData[i].stats.valueMin },
                             { displayName: "Maximum " + valueMeta, value: hexData[i].stats.valueMax },
                         ];
                     }
