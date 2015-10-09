@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *  
  *  Hexbin Scatterplot 
- *  v0.9.3
+ *  v0.9.4
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -108,10 +108,18 @@ module powerbi.visuals {
                     },
                 },
                 rugOptions: {
-                    displayName: 'Rug',
+                    displayName: 'Display',
                     properties: {
-                        show: {
-                            displayName: data.createDisplayNameGetter('Visual_Show'),
+                        showDots: {
+                            displayName: 'Dots',
+                            type: { bool: true }
+                        },
+                        showBins: {
+                            displayName: 'Hexbins',
+                            type: { bool: true }
+                        },
+                        showRug: {
+                            displayName: 'Rug',
                             type: { bool: true }
                         },
                     }
@@ -350,8 +358,22 @@ module powerbi.visuals {
                 .style("text-anchor", "end")
                 .text(yMeta);
 
-            makeHexbins();
-            makeDots();
+            //hexbin main
+            if (this.getShowBins(this.dataView)) {
+                makeHexbins();
+            }
+            else {
+                hexGroup.selectAll(".hexagon").remove();
+            }
+            
+            //dot main
+            if (this.getShowDots(this.dataView)) {
+                makeDots();
+            }
+            else {
+                dotGroup.selectAll(".dot").remove();
+            }
+            //rug main
             if (this.getShowRug(this.dataView)) {
                 layRugs();
             }
@@ -642,7 +664,9 @@ module powerbi.visuals {
                         displayName: 'Rug',
                         selector: null,
                         properties: {
-                            show: this.getShowRug(this.dataView)
+                            showDots: this.getShowDots(this.dataView),
+                            showBins: this.getShowBins(this.dataView),
+                            showRug: this.getShowRug(this.dataView)
                         }
                     };
                     instances.push(rugOptions);
@@ -672,11 +696,31 @@ module powerbi.visuals {
             return 20;
         }
 
+        private getShowBins(dataView: DataView): boolean {
+            if (dataView && dataView.metadata.objects) {
+                var rugOptions = dataView.metadata.objects['rugOptions'];
+                if (rugOptions) {
+                    return <boolean>rugOptions['showBins'];
+                }
+            }
+            return true;
+        }
+
+        private getShowDots(dataView: DataView): boolean {
+            if (dataView && dataView.metadata.objects) {
+                var rugOptions = dataView.metadata.objects['rugOptions'];
+                if (rugOptions) {
+                    return <boolean>rugOptions['showDots'];
+                }
+            }
+            return true;
+        }
+
         private getShowRug(dataView: DataView): boolean {
             if (dataView && dataView.metadata.objects) {
                 var rugOptions = dataView.metadata.objects['rugOptions'];
                 if (rugOptions) {
-                    return <boolean>rugOptions['show'];
+                    return <boolean>rugOptions['showRug'];
                 }
             }
             return true;
