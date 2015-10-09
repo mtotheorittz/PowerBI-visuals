@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *  
  *  Hexbin Scatterplot 
- *  v0.9.2
+ *  v0.9.3
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -90,12 +90,17 @@ module powerbi.visuals {
             }],
             objects: {
                 general: {
-                    displayName: 'General',
+                    displayName: 'Color',
                     properties: {
                         fill: {
                             type: { fill: { solid: { color: true } } },
                             displayName: 'Fill'
                         },
+                    },
+                },
+                size: {
+                    displayName: 'Size',
+                    properties: {
                         hexRadius: {
                             type: { numeric: true },
                             displayName: 'Bin radius'
@@ -612,10 +617,20 @@ module powerbi.visuals {
                 case 'general':
                     var general: VisualObjectInstance = {
                         objectName: 'general',
-                        displayName: 'General',
+                        displayName: 'Color',
                         selector: null,
                         properties: {
-                            fill: this.getFill(this.dataView),
+                            fill: this.getFill(this.dataView)
+                        }
+                    };
+                    instances.push(general);
+                    break;
+                case 'size':
+                    var general: VisualObjectInstance = {
+                        objectName: 'size',
+                        displayName: 'Size',
+                        selector: null,
+                        properties: {
                             hexRadius: this.getHexRadius(this.dataView)
                         }
                     };
@@ -627,7 +642,7 @@ module powerbi.visuals {
                         displayName: 'Rug',
                         selector: null,
                         properties: {
-                            show: this.getShowRug(this.dataView),
+                            show: this.getShowRug(this.dataView)
                         }
                     };
                     instances.push(rugOptions);
@@ -649,9 +664,9 @@ module powerbi.visuals {
 
         private getHexRadius(dataView: DataView): number {
             if (dataView && dataView.metadata.objects) {
-                var general = dataView.metadata.objects['general'];
-                if (general) {
-                    return <number>general['hexRadius'];
+                var size = dataView.metadata.objects['size'];
+                if (size) {
+                    return <number>size['hexRadius'];
                 }
             }
             return 20;
