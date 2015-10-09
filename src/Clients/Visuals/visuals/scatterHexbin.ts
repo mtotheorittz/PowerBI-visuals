@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *  
  *  Hexbin Scatterplot 
- *  v0.9.1
+ *  v0.9.2
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -101,7 +101,16 @@ module powerbi.visuals {
                             displayName: 'Bin radius'
                         },
                     },
-                }
+                },
+                rugOptions: {
+                    displayName: 'Rug',
+                    properties: {
+                        show: {
+                            displayName: data.createDisplayNameGetter('Visual_Show'),
+                            type: { bool: true }
+                        },
+                    }
+                },
             },
         };
 
@@ -297,19 +306,19 @@ module powerbi.visuals {
                     var v = getXValue(d);
                     return v;
                 })).nice()
-                .range([0, w - margin.left]);
+                .range([0, w]);
 
             var yScale = d3.scale.linear()
                 .domain(d3.extent(chartData, function (d) {
                     var v = getYValue(d);
                     return v;
                 })).nice()
-                .range([h - margin.bottom, 0]);
+                .range([h - margin.bottom - margin.top, margin.top]);
 
             var xAxis = d3.svg.axis()
                 .scale(xScale)
                 .orient("bottom")
-                .ticks(5);
+                .ticks(Math.floor(w / 75));
 
             var yAxis = d3.svg.axis()
                 .scale(yScale)
@@ -338,7 +347,13 @@ module powerbi.visuals {
 
             makeHexbins();
             makeDots();
-            layRugs();
+            if (this.getShowRug(this.dataView)) {
+                layRugs();
+            }
+            else {
+                dotGroup.selectAll(".x-rug").remove();
+                dotGroup.selectAll(".y-rug").remove();
+            }
 
             function getXValue(d): number {
                 return d.xValue;
@@ -557,7 +572,7 @@ module powerbi.visuals {
                     .transition()
                     .duration(transitionDuration)
                     .remove();
-                
+
                 for (var i in hexData) {
                     if (valueMeta === "Value") {
                         hexData[i].tooltipInfo = [
@@ -606,6 +621,17 @@ module powerbi.visuals {
                     };
                     instances.push(general);
                     break;
+                case 'rugOptions':
+                    var rugOptions: VisualObjectInstance = {
+                        objectName: 'rugOptions',
+                        displayName: 'Rug',
+                        selector: null,
+                        properties: {
+                            show: this.getShowRug(this.dataView),
+                        }
+                    };
+                    instances.push(rugOptions);
+                    break;
             }
 
             return instances;
@@ -629,6 +655,16 @@ module powerbi.visuals {
                 }
             }
             return 20;
+        }
+
+        private getShowRug(dataView: DataView): boolean {
+            if (dataView && dataView.metadata.objects) {
+                var rugOptions = dataView.metadata.objects['rugOptions'];
+                if (rugOptions) {
+                    return <boolean>rugOptions['show'];
+                }
+            }
+            return true;
         }
 
         public destroy() {
