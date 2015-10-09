@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *  
  *  HTML5 MP3 Audio Narration
- *  v1.0.1
+ *  v1.0.2
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -34,7 +34,9 @@
 /// <reference path="../_references.ts"/>
 
 module powerbi.visuals {
+
     export class MP3AudioNarration implements IVisual {
+
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
@@ -79,6 +81,7 @@ module powerbi.visuals {
         };
 
         private dataView: DataView;
+        private audioContainer: D3.Selection;
 
         public static converter(dataView: DataView): any {
             return {};
@@ -86,7 +89,7 @@ module powerbi.visuals {
 
         public init(options: VisualInitOptions): void {
 
-            d3.select(options.element.get(0)).append("audio");
+            this.audioContainer = d3.select(options.element.get(0)).append("audio");
 
         }
 
@@ -100,31 +103,27 @@ module powerbi.visuals {
             var controlsOption = this.getControlsOption(this.dataView);
             var autoplayOption = this.getAutoplayOption(this.dataView);
 
-            var audio = d3.select("audio");
+            var audio = this.audioContainer;
             audio.attr('src', audioSource);
-            audio.attr('id', 'htmlAudio');
+            audio.attr('class', 'htmlAudio');
             audio.attr('type', 'audio/mpeg');
             if (loopOption === true) {
                 audio.attr('loop', 'loop');
             }
             else {
-                var player = $('#htmlAudio');
-                player.removeAttr('loop');
+                audio.attr('loop', null);
             }
             if (controlsOption === true) {
-                var player = $('#htmlAudio');
                 audio.attr('controls', 'controls');
             }
             else {
-                var player = $('#htmlAudio');
-                player.removeAttr('controls');
+                audio.attr('controls', null);
             }
             if (autoplayOption === true) {
                 audio.attr('autoplay', 'autoplay');
             }
             else {
-                var player = $('#htmlAudio');
-                player.removeAttr('autoplay');
+                audio.attr('autoplay', null);
             }
         }
 
