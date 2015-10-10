@@ -273,6 +273,7 @@ module powerbi.visuals {
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
             var transitionDuration = 1000;
+            var rugLength = 5;
             var dotSize = "2px";
 
             var colMetaIndex = {
@@ -298,8 +299,8 @@ module powerbi.visuals {
                 colMetaIndex = { "category": 0, "x": 1, "y": 2, "value": 3 };
             }
 
-            var margin = { top: 20, right: 0, bottom: 20, left: 50 };
-            var w = options.viewport.width - margin.left;
+            var margin = { top: 20, right: 5, bottom: 20, left: 50 };
+            var w = options.viewport.width - margin.left - margin.right;
             var h = options.viewport.height - margin.bottom;
             var hexGroup = this.hexGroup;
             var dotGroup = this.dotGroup;
@@ -319,14 +320,14 @@ module powerbi.visuals {
                     var v = getXValue(d);
                     return v;
                 })).nice()
-                .range([0, w]);
+                .range([rugLength, w - rugLength]);
 
             var yScale = d3.scale.linear()
                 .domain(d3.extent(chartData, function (d) {
                     var v = getYValue(d);
                     return v;
                 })).nice()
-                .range([h - margin.bottom, margin.top]);
+                .range([h - margin.bottom - rugLength, margin.top]);
 
             var xAxis = d3.svg.axis()
                 .scale(xScale)
@@ -447,7 +448,7 @@ module powerbi.visuals {
                     .attr("x1", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("y1", options.viewport.height - (margin.bottom * 2))
                     .attr("x2", function (d) { var v = getXValue(d); return xScale(v); })
-                    .attr("y2", options.viewport.height - (margin.bottom * 2) - 5)
+                    .attr("y2", options.viewport.height - (margin.bottom * 2) - rugLength)
                     .style("stroke", "grey")
                     .style("stroke-width", "1px");
 
@@ -456,7 +457,7 @@ module powerbi.visuals {
                     .attr("x1", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("y1", options.viewport.height - (margin.bottom * 2))
                     .attr("x2", function (d) { var v = getXValue(d); return xScale(v); })
-                    .attr("y2", options.viewport.height - (margin.bottom * 2) - 5);
+                    .attr("y2", options.viewport.height - (margin.bottom * 2) - rugLength);
 
                 xRug.exit()
                     .transition()
