@@ -40,15 +40,18 @@ module powerbi.visuals {
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
-                    name: 'Category',
-                    kind: powerbi.VisualDataRoleKind.Grouping,
+                    name: 'Values',
+                    kind: powerbi.VisualDataRoleKind.GroupingOrMeasure,
                     displayName: 'Insert Any Field for Audio Options'
                 },
             ],
             dataViewMappings: [{
-                categories: {
-                    for: { in: 'Category' },
-                    dataReductionAlgorithm: { top: {} }
+                table: {
+                    rows: {
+                        for: { in: 'Values' },
+                        dataReductionAlgorithm: { window: { count: 100 } }
+                    },
+                    rowCount: { preferred: { min: 1 } }
                 },
             }],
             objects: {
@@ -96,7 +99,6 @@ module powerbi.visuals {
         public update(options: VisualUpdateOptions) {
 
             this.dataView = options.dataViews[0];
-            this.dataView.categorical.categories[0].source = { displayName: "asdf", value: "asdf" };
 
             var audioSource = this.getAudioSource(this.dataView);
             var loopOption = this.getLoopOption(this.dataView);
