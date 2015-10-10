@@ -332,11 +332,13 @@ module powerbi.visuals {
             var xAxis = d3.svg.axis()
                 .scale(xScale)
                 .orient("bottom")
-                .ticks(Math.floor(w / 75));
+                .ticks(Math.floor(w / 75))
+                .tickFormat(d3.format("s"));
 
             var yAxis = d3.svg.axis()
                 .scale(yScale)
-                .orient("left");
+                .orient("left")
+                .tickFormat(d3.format("s"));
 
             xAxisTicks
                 .attr("transform", "translate(" + margin.left + "," + (h - margin.bottom) + ")")
