@@ -326,7 +326,7 @@ module powerbi.visuals {
                     var v = getYValue(d);
                     return v;
                 })).nice()
-                .range([h - margin.bottom - margin.top, margin.top]);
+                .range([h - margin.bottom, margin.top]);
 
             var xAxis = d3.svg.axis()
                 .scale(xScale)
