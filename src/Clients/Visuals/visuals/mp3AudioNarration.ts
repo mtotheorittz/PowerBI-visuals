@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *  
  *  HTML5 MP3 Audio Narration
- *  v1.0.2
+ *  v1.0.3
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -27,6 +27,10 @@
  *  THE SOFTWARE.
  *
  *  Acknowledgements:
+ *  Sample audio available from University of Michigan Health System
+ *  http://www.michigandifference.org/about/theme-song.html
+ *  "If you enjoy the music, feel free to download the song and use it in your player"
+ *
  *  +JMJ+
  */
 
@@ -35,7 +39,7 @@
 
 module powerbi.visuals {
 
-    export class MP3AudioNarration implements IVisual {
+    export class AudioNarration implements IVisual {
 
         public static capabilities: VisualCapabilities = {
             dataRoles: [
@@ -158,7 +162,7 @@ module powerbi.visuals {
                     return <string>general['mp3Url'];
                 }
             }
-            return "";
+            return "https://raw.githubusercontent.com/deldersveld/datasets/master/audio/umhs.mp3";
         }
 
         private getLoopOption(dataView: DataView): boolean {
@@ -191,13 +195,4 @@ module powerbi.visuals {
             return false;
         }
     }
-}
-
-module powerbi.visuals.plugins {
-    export var _mp3AudioNarration: IVisualPlugin = {
-        name: '_mp3AudioNarration',
-        class: '_MP3AudioNarration',
-        capabilities: MP3AudioNarration.capabilities,
-        create: () => new MP3AudioNarration()
-    };
 }
