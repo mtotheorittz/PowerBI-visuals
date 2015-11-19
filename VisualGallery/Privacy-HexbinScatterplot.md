@@ -1,4 +1,4 @@
-**Privacy Statement - Hexbin Scatterplot  
+##Privacy Statement - Hexbin Scatterplot  
   
 The Hexbin Scatterplot custom visualization for Power BI does not collect personally identifiable information about you. It may be used to represent data in chart form exclusively for the Microsoft Power BI software. The Hexbin Scatterplot cannot control what data you choose to represent in Power BI nor how you choose to distribute in print or digital form. Any future version of this visual will also be bound to this privacy statement.  
   
