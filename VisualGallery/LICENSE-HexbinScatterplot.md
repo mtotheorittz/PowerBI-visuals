@@ -1,3 +1,5 @@
+##License - Hexbin Scatterplot
+
 Power BI Custom Visualization 
 
 Hexbin Scatterplot  
