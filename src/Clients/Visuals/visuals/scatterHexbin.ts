@@ -94,7 +94,7 @@ module powerbi.visuals {
 				}]
             }],
             objects: {
-                general: {
+                color: {
                     displayName: 'Color',
                     properties: {
                         fill: {
@@ -694,19 +694,19 @@ module powerbi.visuals {
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
             var instances: VisualObjectInstance[] = [];
             switch (options.objectName) {
-                case 'general':
-                    var general: VisualObjectInstance = {
-                        objectName: 'general',
+                case 'color':
+                    var color: VisualObjectInstance = {
+                        objectName: 'color',
                         displayName: 'Color',
                         selector: null,
                         properties: {
                             fill: this.getFill(this.dataView)
                         }
                     };
-                    instances.push(general);
+                    instances.push(color);
                     break;
                 case 'size':
-                    var general: VisualObjectInstance = {
+                    var size: VisualObjectInstance = {
                         objectName: 'size',
                         displayName: 'Size',
                         selector: null,
@@ -714,7 +714,7 @@ module powerbi.visuals {
                             hexRadius: this.getHexRadius(this.dataView)
                         }
                     };
-                    instances.push(general);
+                    instances.push(size);
                     break;
                 case 'rugOptions':
                     var rugOptions: VisualObjectInstance = {
@@ -736,9 +736,9 @@ module powerbi.visuals {
 
         private getFill(dataView: DataView): Fill {
             if (dataView && dataView.metadata.objects) {
-                var general = dataView.metadata.objects['general'];
-                if (general) {
-                    return <Fill>general['fill'];
+                var color = dataView.metadata.objects['color'];
+                if (color) {
+                    return <Fill>color['fill'];
                 }
             }
             return { solid: { color: 'rgb(1, 184, 170)' } };
