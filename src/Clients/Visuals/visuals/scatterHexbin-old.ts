@@ -1,8 +1,8 @@
-/*
+﻿/*
  *  Power BI Visualizations
  *  
  *  Hexbin Scatterplot 
- *  v0.9.5
+ *  v0.9.4
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -35,12 +35,12 @@
  */
 
 /* Please make sure that this path is correct */
-//-/// <reference path="../_references.ts"/>
+/// <reference path="../_references.ts"/>
 
 module powerbi.visuals {
 
     import SelectionManager = utility.SelectionManager;
-	import ValueFormatter = powerbi.visuals.valueFormatter;
+
     export interface ScatterHexbinData {
         category: string;
         xValue: number;
@@ -85,13 +85,8 @@ module powerbi.visuals {
                             { bind: { to: 'Y' } },
                             { bind: { to: 'Value' } }
                         ]
-                    }
-                },
-				conditions: [{
-					"X": { max: 1 },
-					"Y": { max: 1 },
-					"Value": { max: 1 }
-				}]
+                    },
+                }
             }],
             objects: {
                 general: {
@@ -142,24 +137,10 @@ module powerbi.visuals {
         private selectionManager: SelectionManager;
         private dataView: DataView;
 
-        public static converter(dataView: DataView): any {
-			if (!dataView ||
-				!dataView.categorical ||
-				!dataView.categorical.categories ||
-				!dataView.categorical.categories[0] ||
-				!dataView.categorical.categories[0].values ||
-				!dataView.categorical.categories[0].values.length) {
-				return null;
-			}
-			
-			if (!dataView.categorical.values ||
-				!dataView.categorical.values[0] ||
-				!dataView.categorical.values[0].values ||
-				!dataView.categorical.values[0].values.length) {
-				return null;
-			}
-			var xAxisFormatter: IValueFormatter = null;	
-			var yAxisFormatter: IValueFormatter = null;
+        public static converter(dataView: DataView): ScatterHexbinData[] {
+            //console.log('converter');
+            //console.log(dataView);
+
             var catDv: DataViewCategorical = dataView.categorical;
             var cat = catDv.categories[0];
             var catValues = cat.values;
@@ -180,35 +161,16 @@ module powerbi.visuals {
                 for (var j = 0, len = values.length; j < len; j++) {
                     var cols = values[j].source.roles;
                     var colKey = Object.keys(cols);
-					
-					for (var keyIndex = 0, lenColKey = colKey.length; keyIndex < lenColKey; keyIndex++) {
-						if (colKey[keyIndex] === "X") { colIndex.x = j; }
-						if (colKey[keyIndex] === "Y") { colIndex.y = j; }
-						if (colKey[keyIndex] === "Value") { colIndex.value = j; }
-					}
+                    //SWITCH not working but multiple IFs do
+                    if (colKey[0] === "X") { colIndex.x = j; }
+                    if (colKey[0] === "Y") { colIndex.y = j; }
+                    if (colKey[0] === "Value") { colIndex.value = j; }
                 }
             }
             else {
                 colIndex = { "x": 0, "y": 1, "value": 2 };
             }
-			
-			if (colIndex.x  == null || colIndex.y  == null) {
-				return null;
-			}
-			
-			if (catValues.length) {
-				xAxisFormatter = ValueFormatter.create({
-					format: ValueFormatter.getFormatString(values[colIndex.x].source, formatStringProp),
-					value: values[colIndex.x].values[0]
-				});
-				if (values[colIndex.y]) {
-					yAxisFormatter = ValueFormatter.create({
-						format: ValueFormatter.getFormatString(values[colIndex.y].source, formatStringProp),
-						value: values[colIndex.y].values[0]
-					});
-				}
-			}
-			
+
             for (var i = 0, len = catValues.length; i < len; i++) {
                 var formattedCategoryValue = valueFormatter.format(catValues[i], categorySourceFormatString);
 
@@ -259,10 +221,7 @@ module powerbi.visuals {
                 });
             }
 
-            return  {
-				dataArray: dataArray,
-				xAxisFormatter: xAxisFormatter,
-				yAxisFormatter: yAxisFormatter};
+            return dataArray;
         }
 
         public init(options: VisualInitOptions): void {
@@ -302,28 +261,20 @@ module powerbi.visuals {
         }
 
         public update(options: VisualUpdateOptions) {
+            //console.log('update');
+            //console.log(options);
+
             this.svg
                 .attr("height", options.viewport.height)
                 .attr("width", options.viewport.width);
 
             this.dataView = options.dataViews[0];
-			
-			if (!this.dataView) {
-				return;
-			}
-			
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
-			if (!chartData) {
-				return;
-			}
-			var dataArray = chartData.dataArray;
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
             var transitionDuration = 1000;
             var rugLength = 5;
             var dotSize = "2px";
-			var xAxisFormatter = chartData.xAxisFormatter;
-			var yAxisFormatter = chartData.yAxisFormatter;
 
             var colMetaIndex = {
                 category: null,
@@ -331,7 +282,7 @@ module powerbi.visuals {
                 y: null,
                 value: null
             };
-			
+
             if (this.dataView.metadata.columns[0].roles) {
                 var meta = this.dataView.metadata.columns;
                 for (var j in meta) {
@@ -347,11 +298,6 @@ module powerbi.visuals {
             else {
                 colMetaIndex = { "category": 0, "x": 1, "y": 2, "value": 3 };
             }
-			
-			if (!this.dataView.metadata.columns[colMetaIndex.x]
-				||!this.dataView.metadata.columns[colMetaIndex.y]) {
-				return;
-			}
 
             var margin = { top: 20, right: 5, bottom: 20, left: 50 };
             var w = options.viewport.width - margin.left - margin.right;
@@ -370,14 +316,14 @@ module powerbi.visuals {
             var selectionManager = this.selectionManager;
 
             var xScale = d3.scale.linear()
-                .domain(d3.extent(dataArray, function (d) {
+                .domain(d3.extent(chartData, function (d) {
                     var v = getXValue(d);
                     return v;
                 })).nice()
                 .range([rugLength, w - rugLength]);
 
             var yScale = d3.scale.linear()
-                .domain(d3.extent(dataArray, function (d) {
+                .domain(d3.extent(chartData, function (d) {
                     var v = getYValue(d);
                     return v;
                 })).nice()
@@ -387,13 +333,12 @@ module powerbi.visuals {
                 .scale(xScale)
                 .orient("bottom")
                 .ticks(Math.floor(w / 75))
-                .tickFormat(function(d) { return xAxisFormatter ? xAxisFormatter.format(d) : d; });
+                .tickFormat(d3.format("s"));
 
             var yAxis = d3.svg.axis()
                 .scale(yScale)
                 .orient("left")
-                .ticks(Math.floor(h / 75))
-                .tickFormat(function(d) { return yAxisFormatter ? yAxisFormatter.format(d) : d; });
+                .tickFormat(d3.format("s"));
 
             xAxisTicks
                 .attr("transform", "translate(" + margin.left + "," + (h - margin.bottom) + ")")
@@ -454,7 +399,7 @@ module powerbi.visuals {
 
             function makeDots() {
                 var dot = dotGroup.selectAll(".dot")
-                    .data(dataArray);
+                    .data(chartData);
 
                 dot.enter()
                     .append("circle")
@@ -493,10 +438,10 @@ module powerbi.visuals {
 
             function layRugs() {
                 var xRug = dotGroup.selectAll(".x-rug")
-                    .data(dataArray);
+                    .data(chartData);
 
                 var yRug = dotGroup.selectAll(".y-rug")
-                    .data(dataArray);
+                    .data(chartData);
 
                 xRug.enter()
                     .append("line")
@@ -623,7 +568,7 @@ module powerbi.visuals {
                     });
                 }
 
-                var hexData = assignHexbin(dataArray, hexRadius);
+                var hexData = assignHexbin(chartData, hexRadius);
                 var fill = fillColor;
 
                 var hexColor = d3.scale.linear()
@@ -789,4 +734,12 @@ module powerbi.visuals {
         }
 
     }
+}
+
+module powerbi.visuals.plugins {
+    export var _scatterHexbin: IVisualPlugin = {
+        name: '_scatterHexbin',
+        capabilities: ScatterHexbin.capabilities,
+        create: () => new ScatterHexbin()
+    };
 }
