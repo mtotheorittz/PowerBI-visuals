@@ -62,17 +62,24 @@ module powerbi.visuals {
                 {
                     name: "X",
                     kind: VisualDataRoleKind.Measure,
-                    displayName: "X Axis"
+                    displayName: data.createDisplayNameGetter('Role_DisplayName_X'),
+                    description: data.createDisplayNameGetter('Role_DisplayName_XScatterChartDescription'),
+                    requiredTypes: [{ numeric: true }, { integer: true }],
+                    cartesianKind: CartesianRoleKind.X,
                 },
                 {
                     name: "Y",
                     kind: VisualDataRoleKind.Measure,
-                    displayName: "Y Axis"
+                    displayName: data.createDisplayNameGetter('Role_DisplayName_Y'),
+                    description: data.createDisplayNameGetter('Role_DisplayName_YScatterChartDescription'),
+                    requiredTypes: [{ numeric: true }, { integer: true }],
+                    cartesianKind: CartesianRoleKind.Y,
                 },
                 {
                     name: "Value",
                     kind: VisualDataRoleKind.Measure,
-                    displayName: "Value"
+                    displayName: "Value",
+                    requiredTypes: [{ numeric: true }, { integer: true }],
                 }
             ],
             dataViewMappings: [{
@@ -94,6 +101,12 @@ module powerbi.visuals {
 				}]
             }],
             objects: {
+                general: {
+                    displayName: data.createDisplayNameGetter('Visual_General'),
+                    properties: {
+                        formatString: StandardObjectProperties.formatString,
+                    },
+                },
                 color: {
                     displayName: 'Color',
                     properties: {
@@ -129,6 +142,7 @@ module powerbi.visuals {
                         },
                     }
                 },
+                
             },
         };
 
