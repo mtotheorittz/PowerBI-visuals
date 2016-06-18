@@ -77,6 +77,7 @@ module powerbi.visuals {
                     name: "Value",
                     kind: VisualDataRoleKind.Measure,
                     displayName: "Value",
+                    description: "When Value is absent, hexbin color saturation is based on density. When Value is present, saturation is based on Value.",
                     requiredTypes: [{ numeric: true }, { integer: true }],
                 }
             ],
