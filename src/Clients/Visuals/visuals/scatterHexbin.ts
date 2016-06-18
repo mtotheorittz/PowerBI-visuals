@@ -415,7 +415,7 @@ module powerbi.visuals {
             xAxisLabel
                 .attr("transform", "translate(" + (w / 2) + "," + (margin.bottom + 6) + ")")
                 .attr("dy", ".32em")
-                .style("text-anchor", "end")
+                .style("text-anchor", "middle")
                 .text(xMeta);
 
             yAxisTicks
@@ -426,7 +426,7 @@ module powerbi.visuals {
                 .attr("transform-origin", "left")
                 .attr("transform", "translate(" + (-margin.left + 6) + "," + (h / 2) + ") rotate(-90)")
                 .attr("dy", ".32em")
-                .style("text-anchor", "end")
+                .style("text-anchor", "middle")
                 .text(yMeta);
 
             //hexbin main
