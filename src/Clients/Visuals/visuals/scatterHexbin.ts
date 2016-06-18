@@ -663,21 +663,21 @@ module powerbi.visuals {
                         hexData[i].tooltipInfo = [
                             { displayName: "Bin statistics", value: "" },
                             { displayName: "Count", value: hexData[i].stats.binCount },
-                            { displayName: "Mean " + xMeta, value: hexData[i].stats.xMean },
-                            { displayName: "Mean " + yMeta, value: hexData[i].stats.yMean },
+                            { displayName: "Mean " + xMeta, value: parseFloat(hexData[i].stats.xMean.toFixed(2)) },
+                            { displayName: "Mean " + yMeta, value: parseFloat(hexData[i].stats.yMean.toFixed(2)) },
                         ];
                     }
                     else {
                         hexData[i].tooltipInfo = [
                             { displayName: "Bin statistics", value: "" },
                             { displayName: "Count", value: hexData[i].stats.binCount },
-                            { displayName: "Mean " + xMeta, value: hexData[i].stats.xMean },
-                            { displayName: "Mean " + yMeta, value: hexData[i].stats.yMean },
-                            { displayName: "Sum of " + valueMeta, value: hexData[i].stats.valueSum },
-                            { displayName: "Mean " + valueMeta, value: hexData[i].stats.valueMean },
-                            { displayName: "Median " + valueMeta, value: hexData[i].stats.valueMedian },
-                            { displayName: "Minimum " + valueMeta, value: hexData[i].stats.valueMin },
-                            { displayName: "Maximum " + valueMeta, value: hexData[i].stats.valueMax },
+                            { displayName: "Mean " + xMeta, value: parseFloat(hexData[i].stats.xMean.toFixed(2)) },
+                            { displayName: "Mean " + yMeta, value: parseFloat(hexData[i].stats.yMean.toFixed(2)) },
+                            { displayName: "Sum of " + valueMeta, value: parseFloat(hexData[i].stats.valueSum.toFixed(2)) },
+                            { displayName: "Mean " + valueMeta, value: parseFloat(hexData[i].stats.valueMean.toFixed(2)) },
+                            { displayName: "Median " + valueMeta, value: parseFloat(hexData[i].stats.valueMedian.toFixed(2)) },
+                            { displayName: "Minimum " + valueMeta, value: parseFloat(hexData[i].stats.valueMin.toFixed(2)) },
+                            { displayName: "Maximum " + valueMeta, value: parseFloat(hexData[i].stats.valueMax.toFixed(2)) },
                         ];
                     }
                 }
