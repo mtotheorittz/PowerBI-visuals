@@ -2,6 +2,6 @@ Open the following link, then copy and paste the template code into DevTools. Th
 
 https://gist.githubusercontent.com/deldersveld/dbfc69576c0c80bc80cd67ea1593fe10/raw/cd966f988f8c7bbdd1cdd07afd3982737629ad30/PowerBITemplate.ts
 
-'''
+```
 asdfds
-'''
+```
