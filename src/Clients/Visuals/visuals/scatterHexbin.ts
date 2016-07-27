@@ -153,6 +153,7 @@ module powerbi.visuals {
         private yAxisTicks: D3.Selection;
         private xAxisLabel: D3.Selection;
         private yAxisLabel: D3.Selection;
+        private notification: D3.Selection;
         private selectionManager: SelectionManager;
         private dataView: DataView;
 
@@ -280,6 +281,12 @@ module powerbi.visuals {
         }
 
         public init(options: VisualInitOptions): void {
+            
+            var notification = this.notification = d3.select(options.element.get(0))
+                .append("div")
+                .attr("id", "notification")
+                .attr("height", options.viewport.height)
+                .attr("width", options.viewport.width);
 
             var svg = this.svg = d3.select(options.element.get(0))
                 .append('svg')
@@ -325,6 +332,9 @@ module powerbi.visuals {
 			if (!this.dataView) {
 				return;
 			}
+            
+            //clear notification
+            d3.select("#note-text").remove();
 			
             //var chartData = [];
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
@@ -333,11 +343,19 @@ module powerbi.visuals {
 	            var dataArray = chartData.dataArray;
             }
             catch(e){
-                //remove all elements if required data is unavailable
+                //remove elements if required data is unavailable
+                d3.selectAll(".axis").selectAll("*").remove();
                 d3.selectAll(".hexagon").remove();
                 d3.selectAll(".dot").remove();
                 d3.selectAll(".x-rug").remove();
                 d3.selectAll(".y-rug").remove();
+                
+                //add notification if required fields not available
+                var noteDiv = d3.select("#notification")
+                
+                noteDiv.append("p")
+                    .attr("id", "note-text")
+                    .text("Add data for Details, X-Axis, and Y-Axis to view this visual");
             }
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
