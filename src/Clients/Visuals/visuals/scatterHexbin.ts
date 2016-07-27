@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *  
  *  Hexbin Scatterplot 
- *  v0.9.5
+ *  v0.9.6
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -94,10 +94,11 @@ module powerbi.visuals {
                     }
                 },
 				conditions: [{
+                    "Category": { max: 1 },
 					"X": { max: 1 },
 					"Y": { max: 1 },
 					"Value": { max: 1 }
-				}]
+				}],
             }],
             objects: {
                 general: {
@@ -124,7 +125,7 @@ module powerbi.visuals {
                         },
                     },
                 },
-                rugOptions: {
+                displayOptions: {
                     displayName: 'Display',
                     properties: {
                         showDots: {
@@ -325,19 +326,28 @@ module powerbi.visuals {
 				return;
 			}
 			
+            //var chartData = [];
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
-			if (!chartData) {
-				return;
-			}
-			var dataArray = chartData.dataArray;
+            
+            try{
+	            var dataArray = chartData.dataArray;
+            }
+            catch(e){
+                //remove all elements if required data is unavailable
+                d3.selectAll(".hexagon").remove();
+                d3.selectAll(".dot").remove();
+                d3.selectAll(".x-rug").remove();
+                d3.selectAll(".y-rug").remove();
+            }
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
             var transitionDuration = 1000;
-            var rugLength = 5;
+            var rugLength = 3;
             var dotSize = "2px";
 			var xAxisFormatter = chartData.xAxisFormatter;
 			var yAxisFormatter = chartData.yAxisFormatter;
-
+            
+            //Used in place of DataRoleHelper
             var colMetaIndex = {
                 category: null,
                 x: null,
@@ -369,6 +379,7 @@ module powerbi.visuals {
             var margin = { top: 20, right: 5, bottom: 20, left: 50 };
             var w = options.viewport.width - margin.left - margin.right;
             var h = options.viewport.height - margin.bottom;
+            var padding = 100;
             var hexGroup = this.hexGroup;
             var dotGroup = this.dotGroup;
             var xAxisTicks = this.xAxisTicks;
@@ -405,7 +416,7 @@ module powerbi.visuals {
             var yAxis = d3.svg.axis()
                 .scale(yScale)
                 .orient("left")
-                .ticks(Math.floor(h / 75))
+                .ticks(Math.floor(h / 40))
                 .tickFormat(function(d) { return yAxisFormatter ? yAxisFormatter.format(d) : d; });
 
             xAxisTicks
@@ -475,8 +486,7 @@ module powerbi.visuals {
                     .attr("transform", "translate(" + margin.left + "," + 0 + ")")
                     .attr("r", dotSize)
                     .attr("cx", function (d) { var v = getXValue(d); return xScale(v); })
-                    .attr("cy", function (d) { var v = getYValue(d); return yScale(v); })
-                    .style("fill", "grey");
+                    .attr("cy", function (d) { var v = getYValue(d); return yScale(v); });
 
                 dot.transition()
                     .duration(transitionDuration)
@@ -518,9 +528,7 @@ module powerbi.visuals {
                     .attr("x1", function (d) { var v = getXValue(d); return xScale(v); })
                     .attr("y1", options.viewport.height - (margin.bottom * 2))
                     .attr("x2", function (d) { var v = getXValue(d); return xScale(v); })
-                    .attr("y2", options.viewport.height - (margin.bottom * 2) - rugLength)
-                    .style("stroke", "grey")
-                    .style("stroke-width", "1px");
+                    .attr("y2", options.viewport.height - (margin.bottom * 2) - rugLength);
 
                 xRug.transition()
                     .duration(100)
@@ -540,16 +548,14 @@ module powerbi.visuals {
                     .attr("transform", "translate(" + margin.left + "," + 0 + ")")
                     .attr("x1", 0)
                     .attr("y1", function (d) { var v = getYValue(d); return yScale(v); })
-                    .attr("x2", 5)
-                    .attr("y2", function (d) { var v = getYValue(d); return yScale(v); })
-                    .style("stroke", "grey")
-                    .style("stroke-width", "1px");
+                    .attr("x2", rugLength)
+                    .attr("y2", function (d) { var v = getYValue(d); return yScale(v); });
 
                 yRug.transition()
                     .duration(100)
                     .attr("x1", 0)
                     .attr("y1", function (d) { var v = getYValue(d); return yScale(v); })
-                    .attr("x2", 5)
+                    .attr("x2", rugLength)
                     .attr("y2", function (d) { var v = getYValue(d); return yScale(v); });
 
                 yRug.exit()
@@ -729,10 +735,10 @@ module powerbi.visuals {
                     };
                     instances.push(size);
                     break;
-                case 'rugOptions':
-                    var rugOptions: VisualObjectInstance = {
-                        objectName: 'rugOptions',
-                        displayName: 'Rug',
+                case 'displayOptions':
+                    var displayOptions: VisualObjectInstance = {
+                        objectName: 'displayOptions',
+                        displayName: 'Display',
                         selector: null,
                         properties: {
                             showDots: this.getShowDots(this.dataView),
@@ -740,7 +746,7 @@ module powerbi.visuals {
                             showRug: this.getShowRug(this.dataView)
                         }
                     };
-                    instances.push(rugOptions);
+                    instances.push(displayOptions);
                     break;
             }
 
@@ -769,9 +775,9 @@ module powerbi.visuals {
 
         private getShowBins(dataView: DataView): boolean {
             if (dataView && dataView.metadata.objects) {
-                var rugOptions = dataView.metadata.objects['rugOptions'];
-                if (rugOptions) {
-                    return <boolean>rugOptions['showBins'];
+                var displayOptions = dataView.metadata.objects['displayOptions'];
+                if (displayOptions) {
+                    return <boolean>displayOptions['showBins'];
                 }
             }
             return true;
@@ -779,9 +785,9 @@ module powerbi.visuals {
 
         private getShowDots(dataView: DataView): boolean {
             if (dataView && dataView.metadata.objects) {
-                var rugOptions = dataView.metadata.objects['rugOptions'];
-                if (rugOptions) {
-                    return <boolean>rugOptions['showDots'];
+                var displayOptions = dataView.metadata.objects['displayOptions'];
+                if (displayOptions) {
+                    return <boolean>displayOptions['showDots'];
                 }
             }
             return true;
@@ -789,9 +795,9 @@ module powerbi.visuals {
 
         private getShowRug(dataView: DataView): boolean {
             if (dataView && dataView.metadata.objects) {
-                var rugOptions = dataView.metadata.objects['rugOptions'];
-                if (rugOptions) {
-                    return <boolean>rugOptions['showRug'];
+                var displayOptions = dataView.metadata.objects['displayOptions'];
+                if (displayOptions) {
+                    return <boolean>displayOptions['showRug'];
                 }
             }
             return true;
