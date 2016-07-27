@@ -335,6 +335,8 @@ module powerbi.visuals {
             
             //clear notification
             d3.select("#note-text").remove();
+            
+            d3.selectAll(".axis").selectAll(".label").attr("visibility", "visible");
 			
             //var chartData = [];
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
@@ -344,7 +346,8 @@ module powerbi.visuals {
             }
             catch(e){
                 //remove elements if required data is unavailable
-                d3.selectAll(".axis").selectAll("*").remove();
+                d3.selectAll(".axis").selectAll(".tick").remove();
+                d3.selectAll(".axis").selectAll(".label").attr("visibility", "hidden");
                 d3.selectAll(".hexagon").remove();
                 d3.selectAll(".dot").remove();
                 d3.selectAll(".x-rug").remove();
