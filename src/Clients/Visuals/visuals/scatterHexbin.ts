@@ -398,14 +398,14 @@ module powerbi.visuals {
                     var v = getXValue(d);
                     return v;
                 })).nice()
-                .range([rugLength, w - rugLength]);
+                .range([rugLength + 5, w - rugLength - 5]);
 
             var yScale = d3.scale.linear()
                 .domain(d3.extent(dataArray, function (d) {
                     var v = getYValue(d);
                     return v;
                 })).nice()
-                .range([h - margin.bottom - rugLength, margin.top]);
+                .range([h - margin.bottom - rugLength - 5, margin.top]);
 
             var xAxis = d3.svg.axis()
                 .scale(xScale)
