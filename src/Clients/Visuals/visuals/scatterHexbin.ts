@@ -724,11 +724,6 @@ module powerbi.visuals {
                 TooltipManager.addTooltip(hex, (tooltipEvent: TooltipEvent) => tooltipEvent.data.tooltipInfo);
             }
 
-            //Additional CSS
-            $(".axis path").css({ "fill": "none", "stroke": "none", "shape-rendering": "crispEdges" });
-            $(".axis line").css({ "fill": "none", "stroke": "grey", "shape-rendering": "crispEdges" });
-            $(".axis text").css({ "fill": "black", "font-size": "11px", "font-family": "wf_segoe-ui_normal,helvetica,arial,sans-serif" });
-
         }
 
         public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {

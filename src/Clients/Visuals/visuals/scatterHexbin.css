@@ -19,3 +19,21 @@
 	stroke: #555555;
 	stroke-width: 2px;
 }
+
+.axis path{
+	fill: none; 
+	stroke: none; 
+	shape-rendering: crispEdges
+}
+
+.axis line{
+	fill: none; 
+	stroke: #777777;
+	shape-rendering: crispEdges;
+}
+
+.axis text{
+	fill: #222222; 
+	font-size: 11px;
+	font-family: wf_segoe-ui_normal,helvetica,arial,sans-serif;
+}
