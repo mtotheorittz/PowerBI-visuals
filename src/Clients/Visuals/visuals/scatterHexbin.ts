@@ -156,6 +156,18 @@ module powerbi.visuals {
         private notification: D3.Selection;
         private selectionManager: SelectionManager;
         private dataView: DataView;
+        
+        private static properties = {
+            hexRadius: {objectName: "size", propertyName: "hexRadius"},
+            showDots: {objectName: "displayOptions", propertyName: "showDots"},
+            showBins: {objectName: "displayOptions", propertyName: "showBins"},
+            showRug: {objectName: "displayOptions", propertyName: "showRug"}
+        }
+        
+        private getHexRadius(dataView: DataView): number { return dataView == null ? 0 : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.hexRadius, 20); }
+        private getShowDots(dataView: DataView): boolean { return dataView == null ? false : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.showDots, true); }
+        private getShowBins(dataView: DataView): boolean { return dataView == null ? false : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.showBins, true); }
+        private getShowRug(dataView: DataView): boolean { return dataView == null ? false : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.showRug, true); }
 
         public static converter(dataView: DataView): any {
 			if (!dataView ||
@@ -777,46 +789,6 @@ module powerbi.visuals {
                 }
             }
             return { solid: { color: 'rgb(1, 184, 170)' } };
-        }
-
-        private getHexRadius(dataView: DataView): number {
-            if (dataView && dataView.metadata.objects) {
-                var size = dataView.metadata.objects['size'];
-                if (size) {
-                    return <number>size['hexRadius'];
-                }
-            }
-            return 20;
-        }
-
-        private getShowBins(dataView: DataView): boolean {
-            if (dataView && dataView.metadata.objects) {
-                var displayOptions = dataView.metadata.objects['displayOptions'];
-                if (displayOptions) {
-                    return <boolean>displayOptions['showBins'];
-                }
-            }
-            return true;
-        }
-
-        private getShowDots(dataView: DataView): boolean {
-            if (dataView && dataView.metadata.objects) {
-                var displayOptions = dataView.metadata.objects['displayOptions'];
-                if (displayOptions) {
-                    return <boolean>displayOptions['showDots'];
-                }
-            }
-            return true;
-        }
-
-        private getShowRug(dataView: DataView): boolean {
-            if (dataView && dataView.metadata.objects) {
-                var displayOptions = dataView.metadata.objects['displayOptions'];
-                if (displayOptions) {
-                    return <boolean>displayOptions['showRug'];
-                }
-            }
-            return true;
         }
 
         public destroy() {
