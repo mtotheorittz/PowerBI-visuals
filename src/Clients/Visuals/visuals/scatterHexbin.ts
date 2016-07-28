@@ -302,7 +302,9 @@ module powerbi.visuals {
 
             var svg = this.svg = d3.select(options.element.get(0))
                 .append('svg')
-                .attr("class", "svgHexbinContainer");
+                .attr("class", "svgHexbinContainer")
+                .attr("height", options.viewport.height)
+                .attr("width", options.viewport.width);
 
             var mainChart = svg.append('g')
                 .attr("class", "mainChartGroup");
@@ -350,7 +352,7 @@ module powerbi.visuals {
             d3.selectAll(".axis").selectAll(".label").attr("visibility", "visible");
             
             //viewport check - don't render if too small
-            if(options.viewport.height < 124 || options.viewport.width < 140){
+            if(options.viewport.height < 99 || options.viewport.width < 120){
                 
                 this.cleanup();
                 this.addNotification("Visual is too small to render");
@@ -456,7 +458,6 @@ module powerbi.visuals {
 
             xAxisLabel
                 .attr("transform", "translate(" + (w / 2) + "," + (margin.bottom + 6) + ")")
-                .attr("dy", ".32em")
                 .style("text-anchor", "middle")
                 .text(xMeta);
 
@@ -465,9 +466,7 @@ module powerbi.visuals {
                 .call(yAxis);
 
             yAxisLabel
-                .attr("transform-origin", "left")
                 .attr("transform", "translate(" + (-margin.left + 6) + "," + (h / 2) + ") rotate(-90)")
-                .attr("dy", ".32em")
                 .style("text-anchor", "middle")
                 .text(yMeta);
 
