@@ -17,6 +17,25 @@
 .y-rug{
 	stroke: #555555;
 	stroke-width: 2px;
+}#notification {
+	position: absolute;
+	top: 30%;
+	width: 100%;
+	text-align: center;
+}
+
+.dot{
+	fill: #333333;
+}
+
+.x-rug{
+	stroke: #555555;
+	stroke-width: 2px;
+}
+
+.y-rug{
+	stroke: #555555;
+	stroke-width: 2px;
 }
 
 .axis path{

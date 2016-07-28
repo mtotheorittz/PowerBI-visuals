@@ -345,12 +345,26 @@ module powerbi.visuals {
 				return;
 			}
             
-            //clear notification
+            //select notification and clear notification text
+            var noteDiv = d3.select("#notification");
             d3.select("#note-text").remove();
             
+            //hide labels if rendered and then fields are later removed
             d3.selectAll(".axis").selectAll(".label").attr("visibility", "visible");
-			
-            //var chartData = [];
+            
+            //viewport check - don't render if too small
+            if(options.viewport.height < 124 || options.viewport.width < 140){
+                
+                this.cleanup();
+                
+                noteDiv.append("p")
+                    .attr("id", "note-text")
+                    .text("Visual size too small");
+                
+                return;
+            }
+            
+
             var chartData = ScatterHexbin.converter(options.dataViews[0]);
             
             try{
@@ -358,16 +372,9 @@ module powerbi.visuals {
             }
             catch(e){
                 //remove elements if required data is unavailable
-                d3.selectAll(".axis").selectAll(".tick").remove();
-                d3.selectAll(".axis").selectAll(".label").attr("visibility", "hidden");
-                d3.selectAll(".hexagon").remove();
-                d3.selectAll(".dot").remove();
-                d3.selectAll(".x-rug").remove();
-                d3.selectAll(".y-rug").remove();
+                this.cleanup();
                 
                 //add notification if required fields not available
-                var noteDiv = d3.select("#notification")
-                
                 noteDiv.append("p")
                     .attr("id", "note-text")
                     .text("Add data for Details, X-Axis, and Y-Axis to view this visual");
@@ -789,6 +796,16 @@ module powerbi.visuals {
                 }
             }
             return { solid: { color: 'rgb(1, 184, 170)' } };
+        }
+        
+        private cleanup(){
+            //remove/hide elements
+            d3.selectAll(".axis").selectAll(".tick").remove();
+            d3.selectAll(".axis").selectAll(".label").attr("visibility", "hidden");
+            d3.selectAll(".hexagon").remove();
+            d3.selectAll(".dot").remove();
+            d3.selectAll(".x-rug").remove();
+            d3.selectAll(".y-rug").remove();
         }
 
         public destroy() {
