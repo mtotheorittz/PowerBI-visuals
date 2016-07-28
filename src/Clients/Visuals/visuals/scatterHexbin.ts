@@ -466,7 +466,7 @@ module powerbi.visuals {
                 .call(yAxis);
 
             yAxisLabel
-                .attr("transform", "translate(" + (-margin.left + 6) + "," + (h / 2) + ") rotate(-90)")
+                .attr("transform", "translate(" + (-margin.left + 9) + "," + (h / 2) + ") rotate(-90)")
                 .style("text-anchor", "middle")
                 .text(yMeta);
 
