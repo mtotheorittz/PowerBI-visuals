@@ -302,9 +302,7 @@ module powerbi.visuals {
 
             var svg = this.svg = d3.select(options.element.get(0))
                 .append('svg')
-                .attr("class", "svgHexbinContainer")
-                .attr("height", options.viewport.height)
-                .attr("width", options.viewport.width);
+                .attr("class", "svgHexbinContainer");
 
             var mainChart = svg.append('g')
                 .attr("class", "mainChartGroup");
@@ -345,8 +343,7 @@ module powerbi.visuals {
 				return;
 			}
             
-            //select notification and clear notification text
-            var noteDiv = d3.select("#notification");
+            //clear any notification text
             d3.select("#note-text").remove();
             
             //hide labels if rendered and then fields are later removed
@@ -356,11 +353,7 @@ module powerbi.visuals {
             if(options.viewport.height < 124 || options.viewport.width < 140){
                 
                 this.cleanup();
-                
-                noteDiv.append("p")
-                    .attr("id", "note-text")
-                    .text("Visual size too small");
-                
+                this.addNotification("Visual is too small to render");
                 return;
             }
             
@@ -375,14 +368,12 @@ module powerbi.visuals {
                 this.cleanup();
                 
                 //add notification if required fields not available
-                noteDiv.append("p")
-                    .attr("id", "note-text")
-                    .text("Add data for Details, X-Axis, and Y-Axis to view this visual");
+                this.addNotification("Add data to Details, X Axis and Y Axis to display the Hexbin Scatterplot");
             }
             var fillColor = this.getFill(this.dataView).solid.color;
             var hexRadius = this.getHexRadius(this.dataView);
             var transitionDuration = 1000;
-            var rugLength = 3;
+            var rugLength = 5;
             var dotSize = "2px";
 			var xAxisFormatter = chartData.xAxisFormatter;
 			var yAxisFormatter = chartData.yAxisFormatter;
@@ -534,7 +525,6 @@ module powerbi.visuals {
                     .attr("cy", function (d) { var v = getYValue(d); return yScale(v); });
 
                 dot.on("click", function (d) {
-                    console.log('dot clicked');
                     selectionManager.select(d.selector).then(ids => {
                         if (ids.length > 0) {
                             dot.style('opacity', 1);
@@ -807,6 +797,14 @@ module powerbi.visuals {
             d3.selectAll(".x-rug").remove();
             d3.selectAll(".y-rug").remove();
         }
+		
+		private addNotification(noteText){
+			//add on-screen message to user
+			var noteDiv = d3.select("#notification");
+			noteDiv.append("p")
+                    .attr("id", "note-text")
+                    .text(noteText);
+		}
 
         public destroy() {
             this.svg.remove();

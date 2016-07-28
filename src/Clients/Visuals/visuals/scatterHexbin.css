@@ -5,30 +5,32 @@
 	text-align: center;
 }
 
+#note-text{
+	font-size: 14px;
+}
+
 .dot{
-	fill: #333333;
+	fill: #555555;
 }
 
 .x-rug{
-	stroke: #555555;
+	stroke: #777777;
 	stroke-width: 2px;
 }
 
 .y-rug{
-	stroke: #555555;
+	stroke: #777777;
 	stroke-width: 2px;
 }
 
 .axis path{
 	fill: none; 
-	stroke: none; 
-	shape-rendering: crispEdges
+	stroke: none;
 }
 
 .axis line{
 	fill: none; 
-	stroke: #777777;
-	shape-rendering: crispEdges;
+	stroke: #AAAAAA;
 }
 
 .axis text{
