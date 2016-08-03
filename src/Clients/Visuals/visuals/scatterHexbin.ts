@@ -2,7 +2,7 @@
  *  Power BI Visualizations
  *  
  *  Hexbin Scatterplot 
- *  v0.9.6
+ *  v0.9.7
  *
  *  Copyright (c) David Eldersveld, BlueGranite Inc.
  *  All rights reserved. 
@@ -147,13 +147,13 @@ module powerbi.visuals {
         };
 
         private svg: D3.Selection;
+        private mainChart: D3.Selection;
         private hexGroup: D3.Selection;
         private dotGroup: D3.Selection;
         private xAxisTicks: D3.Selection;
         private yAxisTicks: D3.Selection;
         private xAxisLabel: D3.Selection;
         private yAxisLabel: D3.Selection;
-        private notification: D3.Selection;
         private selectionManager: SelectionManager;
         private dataView: DataView;
         
@@ -223,7 +223,7 @@ module powerbi.visuals {
 				return null;
 			}
 			
-			if (catValues.length) {
+			/*if (catValues.length) {
 				xAxisFormatter = ValueFormatter.create({
 					format: ValueFormatter.getFormatString(values[colIndex.x].source, formatStringProp),
 					value: values[colIndex.x].values[0]
@@ -234,7 +234,26 @@ module powerbi.visuals {
 						value: values[colIndex.y].values[0]
 					});
 				}
+			}*/
+			
+            console.log("xIndexValues", values[colIndex.x]);
+            console.log("yIndexValues", values[colIndex.y]);
+            
+			if (values[colIndex.x]) {
+				xAxisFormatter = ValueFormatter.create({
+					format: ValueFormatter.getFormatString(values[colIndex.x].source, formatStringProp),
+					value: values[colIndex.x].values[0]
+				});
 			}
+			if (values[colIndex.y]) {
+				yAxisFormatter = ValueFormatter.create({
+					format: ValueFormatter.getFormatString(values[colIndex.y].source, formatStringProp),
+					value: values[colIndex.y].values[0]
+				});
+			}
+		
+			console.log("xAxisFormatter", xAxisFormatter);
+            console.log("yAxisFormatter", yAxisFormatter);
 			
             for (var i = 0, len = catValues.length; i < len; i++) {
                 var formattedCategoryValue = valueFormatter.format(catValues[i], categorySourceFormatString);
@@ -293,41 +312,35 @@ module powerbi.visuals {
         }
 
         public init(options: VisualInitOptions): void {
-            
-            var notification = this.notification = d3.select(options.element.get(0))
-                .append("div")
-                .attr("id", "notification")
-                .attr("height", options.viewport.height)
-                .attr("width", options.viewport.width);
 
-            var svg = this.svg = d3.select(options.element.get(0))
+            this.svg = d3.select(options.element.get(0))
                 .append('svg')
                 .attr("class", "svgHexbinContainer")
                 .attr("height", options.viewport.height)
                 .attr("width", options.viewport.width);
 
-            var mainChart = svg.append('g')
+            this.mainChart = this.svg.append('g')
                 .attr("class", "mainChartGroup");
 
-            this.hexGroup = mainChart.append("g")
+            this.hexGroup = this.mainChart.append("g")
                 .attr("class", "hexGroup");
 
-            this.dotGroup = mainChart.append("g")
+            this.dotGroup = this.mainChart.append("g")
                 .attr("class", "dotGroup");
 
-            var xAxisTicks = this.xAxisTicks = mainChart.append("g")
+            this.xAxisTicks = this.mainChart.append("g")
                 .attr("class", "axis")
                 .attr("id", "xAxis");
 
-            var yAxisTicks = this.yAxisTicks = mainChart.append("g")
+            this.yAxisTicks = this.mainChart.append("g")
                 .attr("class", "axis")
                 .attr("id", "yAxis");
 
-            this.xAxisLabel = xAxisTicks.append("text")
+            this.xAxisLabel = this.xAxisTicks.append("text")
                 .attr("class", "label")
                 .attr("id", "xAxisLabel");
 
-            this.yAxisLabel = yAxisTicks.append("text")
+            this.yAxisLabel = this.yAxisTicks.append("text")
                 .attr("class", "label")
                 .attr("id", "yAxisLabel");
 
@@ -346,10 +359,10 @@ module powerbi.visuals {
 			}
             
             //clear any notification text
-            d3.select("#note-text").remove();
+            this.mainChart.select(".note-text").remove();
             
             //hide labels if rendered and then fields are later removed
-            d3.selectAll(".axis").selectAll(".label").attr("visibility", "visible");
+            this.mainChart.selectAll(".axis").selectAll(".label").attr("visibility", "visible");
             
             //viewport check - don't render if too small
             if(options.viewport.height < 99 || options.viewport.width < 120){
@@ -789,19 +802,21 @@ module powerbi.visuals {
         
         private cleanup(){
             //remove/hide elements
-            d3.selectAll(".axis").selectAll(".tick").remove();
-            d3.selectAll(".axis").selectAll(".label").attr("visibility", "hidden");
-            d3.selectAll(".hexagon").remove();
-            d3.selectAll(".dot").remove();
-            d3.selectAll(".x-rug").remove();
-            d3.selectAll(".y-rug").remove();
+            this.mainChart.selectAll(".axis").selectAll(".tick").remove();
+            this.mainChart.selectAll(".axis").selectAll(".label").attr("visibility", "hidden");
+            this.mainChart.selectAll(".hexagon").remove();
+            this.mainChart.selectAll(".dot").remove();
+            this.mainChart.selectAll(".x-rug").remove();
+            this.mainChart.selectAll(".y-rug").remove();
         }
 		
 		private addNotification(noteText){
 			//add on-screen message to user
-			var noteDiv = d3.select("#notification");
-			noteDiv.append("p")
-                    .attr("id", "note-text")
+			this.mainChart.append("text")
+                    .attr("class", "note-text")
+                    .attr("x", "50%")
+                    .attr("y", "45%")
+                    .style("text-anchor", "middle")
                     .text(noteText);
 		}
 

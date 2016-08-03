@@ -1,14 +1,3 @@
-#notification {
-	position: absolute;
-	top: 30%;
-	width: 100%;
-	text-align: center;
-}
-
-#note-text{
-	font-size: 14px;
-}
-
 .dot{
 	fill: #555555;
 }
