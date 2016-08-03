@@ -298,8 +298,8 @@ module powerbi.visuals {
 
                 dataArray.push({
                     category: catValues[i],
-                    xValue: values[colIndex.x].values[i],
-                    yValue: values.length > 1 ? values[colIndex.y].values[i] : 1,
+                    xValue: values[colIndex.x].values[i] == null ? 0: values[colIndex.x].values[i],
+                    yValue: values[colIndex.y].values[i] == null ? 0: (values.length > 1 ? values[colIndex.y].values[i] : 1),
                     sizeValue: values.length > 2 ? values[colIndex.value].values[i] : 1,
                     selector: SelectionId.createWithId(cat.identity[i]),
                     tooltipInfo: tooltipInfo

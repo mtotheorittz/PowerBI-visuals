@@ -8,6 +8,7 @@
 
 - Fixed issue where visuals are affected by actions made under other Hexbin Scatterplot visuals in the same report
 - Bin size now based on container width instead of pixels and defaults to 10%
+- Replaces null/missing values with 0
 
 ## 0.9.6
 
