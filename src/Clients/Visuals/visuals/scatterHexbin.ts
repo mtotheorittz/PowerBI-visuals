@@ -49,7 +49,7 @@ module powerbi.visuals {
         selector: SelectionId;
         tooltipInfo: TooltipDataItem[];
     };
-
+    
     export class ScatterHexbin implements IVisual {
 
         public static capabilities: VisualCapabilities = {
@@ -120,8 +120,9 @@ module powerbi.visuals {
                     displayName: 'Size',
                     properties: {
                         hexRadius: {
-                            type: { numeric: true },
-                            displayName: 'Bin radius'
+                            //type: { numeric: true },
+                            type: {formatting: { fontSize: true } },
+                            displayName: 'Bin radius',
                         },
                     },
                 },
@@ -164,7 +165,7 @@ module powerbi.visuals {
             showRug: {objectName: "displayOptions", propertyName: "showRug"}
         }
         
-        private getHexRadius(dataView: DataView): number { return dataView == null ? 0 : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.hexRadius, 20); }
+        private getHexRadius(dataView: DataView): number { return dataView == null ? 0 : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.hexRadius, 10); }
         private getShowDots(dataView: DataView): boolean { return dataView == null ? false : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.showDots, true); }
         private getShowBins(dataView: DataView): boolean { return dataView == null ? false : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.showBins, true); }
         private getShowRug(dataView: DataView): boolean { return dataView == null ? false : DataViewObjects.getValue(dataView.metadata.objects, ScatterHexbin.properties.showRug, true); }
@@ -386,7 +387,7 @@ module powerbi.visuals {
                 this.addNotification("Add data to Details, X Axis and Y Axis to display the Hexbin Scatterplot");
             }
             var fillColor = this.getFill(this.dataView).solid.color;
-            var hexRadius = this.getHexRadius(this.dataView);
+            var hexRadius = options.viewport.width * this.getHexRadius(this.dataView) / 200;
             var transitionDuration = 1000;
             var rugLength = 5;
             var dotSize = "2px";

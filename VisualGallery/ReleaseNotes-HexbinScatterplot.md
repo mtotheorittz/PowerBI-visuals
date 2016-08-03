@@ -4,6 +4,11 @@
 
 - Visual will not render on Power BI iOS app or Safari in MacOS
 
+## 0.9.7
+
+- Fixed issue where visuals are affected by actions made under other Hexbin Scatterplot visuals in the same report
+- Bin size now based on container width instead of pixels and defaults to 10%
+
 ## 0.9.6
 
 - Fixed issue with overlapping Y axis labels
