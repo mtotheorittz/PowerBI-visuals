@@ -188,6 +188,7 @@ module powerbi.visuals {
 			}
 			var xAxisFormatter: IValueFormatter = null;	
 			var yAxisFormatter: IValueFormatter = null;
+            var measureValueFormatter: IValueFormatter = null;
             var catDv: DataViewCategorical = dataView.categorical;
             var cat = catDv.categories[0];
             var catValues = cat.values;
@@ -252,6 +253,12 @@ module powerbi.visuals {
 					value: values[colIndex.y].values[0]
 				});
 			}
+            if (values[colIndex.value]) {
+				measureValueFormatter = ValueFormatter.create({
+					format: ValueFormatter.getFormatString(values[colIndex.value].source, formatStringProp),
+					value: values[colIndex.value].values[0]
+				});
+			}
 		
 			console.log("xAxisFormatter", xAxisFormatter);
             console.log("yAxisFormatter", yAxisFormatter);
@@ -309,7 +316,8 @@ module powerbi.visuals {
             return  {
 				dataArray: dataArray,
 				xAxisFormatter: xAxisFormatter,
-				yAxisFormatter: yAxisFormatter};
+				yAxisFormatter: yAxisFormatter,
+                measureValueFormatter: measureValueFormatter};
         }
 
         public init(options: VisualInitOptions): void {
@@ -393,6 +401,7 @@ module powerbi.visuals {
             var dotSize = "2px";
 			var xAxisFormatter = chartData.xAxisFormatter;
 			var yAxisFormatter = chartData.yAxisFormatter;
+            var measureValueFormatter = chartData.measureValueFormatter;
             
             //Used in place of DataRoleHelper
             var colMetaIndex = {
@@ -725,16 +734,16 @@ module powerbi.visuals {
                         hexData[i].tooltipInfo = [
                             { displayName: "Bin statistics", value: "" },
                             { displayName: "Count", value: hexData[i].stats.binCount },
-                            { displayName: "Mean " + xMeta, value: parseFloat(hexData[i].stats.xMean.toFixed(2)) },
-                            { displayName: "Mean " + yMeta, value: parseFloat(hexData[i].stats.yMean.toFixed(2)) },
+                            { displayName: "Mean " + xMeta, value: xAxisFormatter ? xAxisFormatter.format(parseFloat(hexData[i].stats.xMean.toFixed(2))) : parseFloat(hexData[i].stats.xMean.toFixed(2)) },
+                            { displayName: "Mean " + yMeta, value: yAxisFormatter ? yAxisFormatter.format(parseFloat(hexData[i].stats.yMean.toFixed(2))) : parseFloat(hexData[i].stats.yMean.toFixed(2)) },
                         ];
                     }
                     else {
                         hexData[i].tooltipInfo = [
                             { displayName: "Bin statistics", value: "" },
                             { displayName: "Count", value: hexData[i].stats.binCount },
-                            { displayName: "Mean " + xMeta, value: parseFloat(hexData[i].stats.xMean.toFixed(2)) },
-                            { displayName: "Mean " + yMeta, value: parseFloat(hexData[i].stats.yMean.toFixed(2)) },
+                            { displayName: "Mean " + xMeta, value: xAxisFormatter ? xAxisFormatter.format(parseFloat(hexData[i].stats.xMean.toFixed(2))) : parseFloat(hexData[i].stats.xMean.toFixed(2)) },
+                            { displayName: "Mean " + yMeta, value: yAxisFormatter ? yAxisFormatter.format(parseFloat(hexData[i].stats.yMean.toFixed(2))) : parseFloat(hexData[i].stats.yMean.toFixed(2)) },
                             { displayName: "Sum of " + valueMeta, value: parseFloat(hexData[i].stats.valueSum.toFixed(2)) },
                             { displayName: "Mean " + valueMeta, value: parseFloat(hexData[i].stats.valueMean.toFixed(2)) },
                             { displayName: "Median " + valueMeta, value: parseFloat(hexData[i].stats.valueMedian.toFixed(2)) },
