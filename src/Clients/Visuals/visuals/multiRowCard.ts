@@ -25,7 +25,93 @@
  */
 
 /// <reference path="../_references.ts"/>
+"use strict";
+import "@babel/polyfill";
+import "./../style/visual.less";
+import powerbi from "powerbi-visuals-api";
+import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
+import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
+import IVisual = powerbi.extensibility.visual.IVisual;
+import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
+import VisualObjectInstance = powerbi.VisualObjectInstance;
+import DataView = powerbi.DataView;
+import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnumerationObject;
 
+import { VisualSettings } from "./settings";
+
+function addNewItem() {
+    const itemsElement = document.getElementById("items");
+    const newItem = document.createElement("div");
+    newItem.innerText = "New item";
+    itemsElement.appendChild(newItem);
+    itemsElement.scrollTop = (itemsElement.children.length) * 20 - 100;
+}
+
+function autoScrollDown() {
+    const itemsElement = document.getElementById("items");
+    itemsElement.scrollTop = 0;
+    const stopPosition = (itemsElement.children.length) * 20 - 100;
+    const timerId = setInterval(function () {
+        if (itemsElement.scrollTop >= stopPosition) {
+            clearInterval(timerId);
+        }
+        itemsElement.scrollTop += 1;
+    }, 100);
+}
+
+export class Visual implements IVisual {
+    private target: HTMLElement;
+    private settings: VisualSettings    
+
+    constructor(options: VisualConstructorOptions) {
+        this.target = options.element;
+        if (typeof document !== "undefined") {
+            const container: HTMLElement = document.createElement("div");
+            
+            container.innerHTML = `
+    <h1>Scroll positioning example</h1>
+    <button id="addNewItemButton">Add new item</button>
+    <button id="AutoScrollDownButton">Auto Scroll Down</button>
+    <br /><br />
+    <div id="items" class="items">
+        <div>Old item 1</div>
+        <div>Old item 2</div>
+        <div>Old item 3</div>
+        <div>Old item 4</div>
+        <div>Old item 5</div>
+        <div>Old item 6</div>
+        <div>Old item 7</div>
+        <div>Old item 8</div>
+    </div>
+            `;
+
+            this.target.appendChild(container);
+
+            const addBtn = document.getElementById("addNewItemButton");
+            addBtn.addEventListener("click", addNewItem);
+
+            const autoscrollBtn = document.getElementById("AutoScrollDownButton");
+            autoscrollBtn.addEventListener("click", autoScrollDown);
+        }
+    }
+
+    public update(options: VisualUpdateOptions) {
+
+    }
+
+    private static parseSettings(dataView: DataView): VisualSettings {
+        return VisualSettings.parse(dataView) as VisualSettings;
+    }
+
+    /**
+     * This function gets called for each of the objects defined in the capabilities files and allows you to select which of the
+     * objects and properties you want to expose to the users in the property pane.
+     *
+     */
+    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject {
+        return VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options);
+    }
+}
 module powerbi.visuals {
     export interface CardItemData {
         caption: string;
